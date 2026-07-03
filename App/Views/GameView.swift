@@ -24,6 +24,7 @@ struct GameView: View {
                     moveTargets: session.moveTargets,
                     pushTargets: session.pushTargets,
                     placementTargets: session.interactionEnabled ? session.placementTargets : [],
+                    perspective: perspective,
                     onTap: { session.tap($0) }
                 )
                 .padding(.horizontal, 8)
@@ -94,6 +95,12 @@ struct GameView: View {
         .padding(.vertical, 8)
         .background(Capsule().fill(.white.opacity(isActive ? 0.18 : 0.05)))
         .overlay(Capsule().strokeBorder(isActive ? Theme.accent : .clear, lineWidth: 1.5))
+    }
+
+    /// Online players always see their own side at the bottom.
+    private var perspective: Player {
+        if case .online(let localSide) = session.mode { return localSide }
+        return .one
     }
 
     private func name(of player: Player) -> String {

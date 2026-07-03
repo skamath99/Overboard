@@ -16,6 +16,9 @@ struct BoardView: View {
     var moveTargets: Set<Position> = []
     var pushTargets: Set<Position> = []
     var placementTargets: Set<Position> = []
+    /// The player seated at the bottom of the screen. Online games pass the
+    /// local side so each player sees their own pieces advancing upward.
+    var perspective: Player = .one
     var onTap: ((Position) -> Void)?
 
     private static let railSpans: [(row: Int, columns: ClosedRange<Int>, outward: Bool)] = [
@@ -73,12 +76,19 @@ struct BoardView: View {
             .sorted { $0.id < $1.id }
     }
 
+    /// Maps an engine position to display coordinates in tile units,
+    /// honouring the perspective (a 180° turn for player two).
+    private func displayXY(_ position: Position) -> (x: CGFloat, y: CGFloat) {
+        perspective == .one
+            ? (CGFloat(position.row), CGFloat(Board.columnCount - 1 - position.column))
+            : (CGFloat(Board.rowCount - 1 - position.row), CGFloat(position.column))
+    }
+
     private func center(of position: Position, tile: CGFloat, originX: CGFloat, originY: CGFloat) -> CGPoint {
-        CGPoint(
-            // Rank 1 renders on the left, rank 4 on the right.
-            x: originX + (CGFloat(position.row) + 0.5) * tile,
-            // Column a renders at the bottom (player one's side).
-            y: originY + (CGFloat(Board.columnCount - 1 - position.column) + 0.5) * tile
+        let (x, y) = displayXY(position)
+        return CGPoint(
+            x: originX + (x + 0.5) * tile,
+            y: originY + (y + 0.5) * tile
         )
     }
 
@@ -119,15 +129,15 @@ struct BoardView: View {
 
     private func railBar(span: (row: Int, columns: ClosedRange<Int>, outward: Bool), tile: CGFloat, originX: CGFloat, originY: CGFloat) -> some View {
         let length = tile * CGFloat(span.columns.count)
-        let midColumn = CGFloat(span.columns.lowerBound + span.columns.upperBound) / 2
-        let rowX = originX + (CGFloat(span.row) + 0.5) * tile
-        let offset = (span.outward ? 1 : -1) * tile * 0.58
+        let start = displayXY(Position(column: span.columns.lowerBound, row: span.row))
+        let end = displayXY(Position(column: span.columns.upperBound, row: span.row))
+        let towardOutside: CGFloat = (span.outward != (perspective == .two)) ? 1 : -1
         return Capsule()
             .fill(Theme.rail)
             .frame(width: tile * 0.13, height: length * 0.98)
             .position(
-                x: rowX + offset,
-                y: originY + (CGFloat(Board.columnCount - 1) - midColumn + 0.5) * tile
+                x: originX + (start.x + 0.5) * tile + towardOutside * tile * 0.58,
+                y: originY + ((start.y + end.y) / 2 + 0.5) * tile
             )
             .shadow(color: .black.opacity(0.3), radius: 2, y: 1)
     }

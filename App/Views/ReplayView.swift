@@ -23,7 +23,7 @@ struct ReplayView: View {
         ZStack {
             Theme.background.ignoresSafeArea()
             VStack(spacing: 20) {
-                BoardView(state: shownState, tracker: shownTracker)
+                BoardView(state: shownState, tracker: shownTracker, perspective: match.localSide ?? .one)
                     .padding(.horizontal, 8)
 
                 Text(caption)
