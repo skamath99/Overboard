@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		1713B70DA43A1A6EEA5E1AFC /* GameCenterManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1D41083F0E5F6C299A030B1C /* GameCenterManager.swift */; };
+		31BB9D4841AB5ED7DBD18209 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 82DB3A2BC9273F212724163C /* Assets.xcassets */; };
 		40B7A06658E457C1F660DA8F /* GameView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C84FB05956288859DC6A7E34 /* GameView.swift */; };
 		61E5B527E5E15B23A5495615 /* HomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 540E55DBF8B4F2DDF1A4ADF2 /* HomeView.swift */; };
 		64ACBF1C34E66EB251CBBEA1 /* PushFightApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 26815918801936FCD54F2FB8 /* PushFightApp.swift */; };
@@ -49,6 +50,7 @@
 		5C13A7E2D08474C9E11FAA4C /* HistoryStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HistoryStore.swift; sourceTree = "<group>"; };
 		745CF9BF8BBE5AAF544EBF23 /* Theme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Theme.swift; sourceTree = "<group>"; };
 		7D5E2937CD9247EAA5DABFDE /* PushFight.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = PushFight.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		82DB3A2BC9273F212724163C /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		C84FB05956288859DC6A7E34 /* GameView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameView.swift; sourceTree = "<group>"; };
 		CDFFB0CE27040C7F714C5089 /* PushFightUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PushFightUITests.swift; sourceTree = "<group>"; };
 		D3DC55271A1DE17384182945 /* GameSession.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameSession.swift; sourceTree = "<group>"; };
@@ -137,6 +139,7 @@
 		DFA47B5045134CE72A6AD0C5 /* App */ = {
 			isa = PBXGroup;
 			children = (
+				82DB3A2BC9273F212724163C /* Assets.xcassets */,
 				2F9C27948B80BA1D38A31EA4 /* PushFight.entitlements */,
 				26815918801936FCD54F2FB8 /* PushFightApp.swift */,
 				745CF9BF8BBE5AAF544EBF23 /* Theme.swift */,
@@ -173,6 +176,7 @@
 			buildConfigurationList = 25B0D6BDEC45FE4D186E568A /* Build configuration list for PBXNativeTarget "PushFight" */;
 			buildPhases = (
 				1CB02C34E1118A6B39A96712 /* Sources */,
+				EF194BCC74569018C102A799 /* Resources */,
 				FA1E8FFBA539CAA2DC0619E9 /* Frameworks */,
 			);
 			buildRules = (
@@ -223,6 +227,17 @@
 			);
 		};
 /* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		EF194BCC74569018C102A799 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				31BB9D4841AB5ED7DBD18209 /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		1CB02C34E1118A6B39A96712 /* Sources */ = {
