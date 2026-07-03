@@ -1,19 +1,58 @@
 # PushFight iOS
 
-A native iOS app for playing [Push Fight](https://pushfightgame.com/) with friends, built with SwiftUI and Game Center turn-based matches. Successor to the earlier React Native + Firebase attempt (PushFight / PushFightFirebase / PushFightLibrary), consolidated into this single repo with no backend.
+A native iOS app for playing [Push Fight](https://pushfightgame.com/) with friends, built with SwiftUI and Game Center turn-based matches. Successor to the earlier React Native + Firebase attempt (PushFight / PushFightFirebase / PushFightLibrary), consolidated into this single repo with **no backend**.
+
+## Features
+
+- **Pass & Play** — full local game on one device, with placement, move/push highlighting, undo, and animated pieces.
+- **Play a Friend** — Game Center turn-based match via the system invite UI.
+- **Ranked Lobby** — auto-match against strangers; players are paired within Elo bands (`GKMatchRequest.playerGroup`), and ratings update after each ranked game.
+- **Match History** — every finished game is stored locally and can be replayed move by move (scrubber + autoplay).
+- **Elo** — standard Elo (K=32), starting at 1200, persisted locally and mirrored to a Game Center leaderboard (`pushfight.elo`).
 
 ## Architecture
 
-- **`PushFightCore/`** — pure Swift package with the complete rules engine: board geometry, placement, movement (BFS sliding), pushes, rails, the anchor, and both win conditions (piece pushed off; player unable to push). No UI or networking dependencies; fully unit-tested. `GameState` is `Codable` so it serializes directly into `GKTurnBasedMatch.matchData`.
-- **App target** (added via Xcode) — SwiftUI board UI. Milestones:
-  1. ✅ Rules engine + tests
-  2. Pass-and-play on one device
-  3. Game Center turn-based multiplayer (invites, turn notifications — no server)
-  4. Polish: animations, match history, resign/rematch
+```
+PushFightiOS/
+├── PushFightCore/          Pure Swift rules engine (SPM package, no dependencies)
+│   ├── GameState           Board, placement, BFS moves, pushes, rails, anchor, win detection
+│   ├── GameRecord          Action log; replay/undo/scrub derive any state
+│   └── Elo                 Rating math + matchmaking bands
+├── App/
+│   ├── Models/             GameSession (interaction/selection), stores (history, Elo)
+│   ├── GameCenter/         GameCenterManager (auth, matchmaking, turn sync), matchmaker UI
+│   └── Views/              Home, Game (board + HUD), History, Replay
+└── UITests/                Smoke test playing a real game (placement → move → undo → push)
+```
+
+`GKTurnBasedMatch.matchData` carries a JSON `OnlineMatchPayload { game: GameRecord, ranked, ratings }` — the action log *is* the game, so sync, replay, and history all share one representation.
+
+## Development
+
+Generate the Xcode project (requires [XcodeGen](https://github.com/yonaskolb/XcodeGen)) and run tests:
+
+```sh
+xcodegen generate
+open PushFight.xcodeproj
+
+cd PushFightCore && swift test          # engine tests
+xcodebuild test -project PushFight.xcodeproj -scheme PushFight \
+  -destination 'platform=iOS Simulator,name=iPhone 16 Pro'     # UI smoke test
+```
+
+If `swift test` fails with a manifest/linker error, the active toolchain is Command Line Tools; prefix commands with `DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer` (or run `sudo xcode-select -s /Applications/Xcode.app`).
+
+### Game Center setup (one-time, for online play)
+
+1. In Xcode, set your development team on the PushFight target.
+2. Create the app record in App Store Connect with bundle ID `com.sank.pushfight` and enable Game Center.
+3. Add a leaderboard with ID `pushfight.elo` (classic, most-recent-score) for Elo mirroring.
+
+Local pass-and-play works in the simulator with no setup.
 
 ## The board
 
-4×8 grid, 26 tiles (a1, g1, h1, a4, b4, h4 are missing). Rails run along the top of row 4 and the bottom of row 1; every other outside edge is open — pieces pushed past an open edge fall off and lose the game for their owner.
+4×8 grid, 26 tiles (a1, g1, h1, a4, b4, h4 are missing). Rails run along the top of row 4 and the bottom of row 1; every other outside edge is open — a piece pushed past an open edge falls off and loses the game for its owner.
 
 ```
       abcdefgh
@@ -24,17 +63,4 @@ A native iOS app for playing [Push Fight](https://pushfightgame.com/) with frien
       abcdefgh
 ```
 
-Each player has 3 squares (move + push) and 2 rounds (move only). A turn is up to 2 moves followed by a mandatory push; the anchor sits on the last pusher and cannot be pushed.
-
-## Development
-
-```sh
-cd PushFightCore
-swift test
-```
-
-If `swift test` fails with a manifest/linker error, the machine's active toolchain is Command Line Tools; use the full Xcode toolchain:
-
-```sh
-DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer swift test
-```
+Each player has 3 squares (move + push) and 2 rounds (move only). A turn is up to 2 moves followed by a mandatory push; the anchor sits on the last pusher and cannot be pushed. Lose by having a piece pushed off — or by being unable to push.

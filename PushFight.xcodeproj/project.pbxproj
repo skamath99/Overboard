@@ -1,0 +1,513 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 54;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		1713B70DA43A1A6EEA5E1AFC /* GameCenterManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1D41083F0E5F6C299A030B1C /* GameCenterManager.swift */; };
+		40B7A06658E457C1F660DA8F /* GameView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C84FB05956288859DC6A7E34 /* GameView.swift */; };
+		61E5B527E5E15B23A5495615 /* HomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 540E55DBF8B4F2DDF1A4ADF2 /* HomeView.swift */; };
+		64ACBF1C34E66EB251CBBEA1 /* PushFightApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 26815918801936FCD54F2FB8 /* PushFightApp.swift */; };
+		732BEAAA6998DECC82C0B07C /* MatchmakerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 166609C762E10BDE279C112A /* MatchmakerView.swift */; };
+		77D6E60F9CEC4487F253B38C /* ReplayView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1ED85B2658FA46395C6F8255 /* ReplayView.swift */; };
+		7D710F36030847C1314EE916 /* PushFightUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CDFFB0CE27040C7F714C5089 /* PushFightUITests.swift */; };
+		9B45ED438AB724EBDC82D055 /* BoardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1D44DC4B2CFFDD4F8AC1C4E7 /* BoardView.swift */; };
+		9D0BF0F45939E272D26C83FA /* MatchRecord.swift in Sources */ = {isa = PBXBuildFile; fileRef = 35AC8D24F357A9E9F20DEEF7 /* MatchRecord.swift */; };
+		A9AAB7831DB5FB61A199244E /* EloStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA5F9C26685C0C77D71511F9 /* EloStore.swift */; };
+		A9E2983C1431BD0B251E9BA6 /* HistoryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 305FCA0619B4ECB28ED3A3DB /* HistoryView.swift */; };
+		AE9B9188D06FD0D01F4A2F65 /* Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 745CF9BF8BBE5AAF544EBF23 /* Theme.swift */; };
+		B083BFFA867389895736BB2C /* PushFightCore in Frameworks */ = {isa = PBXBuildFile; productRef = 89CBB486D22B6708904AE11B /* PushFightCore */; };
+		BB2E3ADF649D427BD3EAD3C2 /* HistoryStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5C13A7E2D08474C9E11FAA4C /* HistoryStore.swift */; };
+		F74A52E18F12DAC085BEFD3D /* GameSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = D3DC55271A1DE17384182945 /* GameSession.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		FD2E24077C8A20FEC3B34169 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 4350CBBA8446DDBEB040A0C5 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 70A7A2691AD08F50F94E7E75;
+			remoteInfo = PushFight;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXFileReference section */
+		166609C762E10BDE279C112A /* MatchmakerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MatchmakerView.swift; sourceTree = "<group>"; };
+		1D41083F0E5F6C299A030B1C /* GameCenterManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameCenterManager.swift; sourceTree = "<group>"; };
+		1D44DC4B2CFFDD4F8AC1C4E7 /* BoardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BoardView.swift; sourceTree = "<group>"; };
+		1ED85B2658FA46395C6F8255 /* ReplayView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReplayView.swift; sourceTree = "<group>"; };
+		26815918801936FCD54F2FB8 /* PushFightApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PushFightApp.swift; sourceTree = "<group>"; };
+		283440BC03D341990E04A291 /* PushFightUITests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = PushFightUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		2F9C27948B80BA1D38A31EA4 /* PushFight.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = PushFight.entitlements; sourceTree = "<group>"; };
+		305FCA0619B4ECB28ED3A3DB /* HistoryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HistoryView.swift; sourceTree = "<group>"; };
+		35AC8D24F357A9E9F20DEEF7 /* MatchRecord.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MatchRecord.swift; sourceTree = "<group>"; };
+		4CA8BE05E9AD447A96A2365A /* PushFightCore */ = {isa = PBXFileReference; lastKnownFileType = folder; name = PushFightCore; path = PushFightCore; sourceTree = SOURCE_ROOT; };
+		540E55DBF8B4F2DDF1A4ADF2 /* HomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeView.swift; sourceTree = "<group>"; };
+		5C13A7E2D08474C9E11FAA4C /* HistoryStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HistoryStore.swift; sourceTree = "<group>"; };
+		745CF9BF8BBE5AAF544EBF23 /* Theme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Theme.swift; sourceTree = "<group>"; };
+		7D5E2937CD9247EAA5DABFDE /* PushFight.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = PushFight.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		C84FB05956288859DC6A7E34 /* GameView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameView.swift; sourceTree = "<group>"; };
+		CDFFB0CE27040C7F714C5089 /* PushFightUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PushFightUITests.swift; sourceTree = "<group>"; };
+		D3DC55271A1DE17384182945 /* GameSession.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameSession.swift; sourceTree = "<group>"; };
+		EA5F9C26685C0C77D71511F9 /* EloStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EloStore.swift; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		FA1E8FFBA539CAA2DC0619E9 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				B083BFFA867389895736BB2C /* PushFightCore in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		48AE18E71DFF932468A843A8 /* Views */ = {
+			isa = PBXGroup;
+			children = (
+				1D44DC4B2CFFDD4F8AC1C4E7 /* BoardView.swift */,
+				C84FB05956288859DC6A7E34 /* GameView.swift */,
+				305FCA0619B4ECB28ED3A3DB /* HistoryView.swift */,
+				540E55DBF8B4F2DDF1A4ADF2 /* HomeView.swift */,
+				1ED85B2658FA46395C6F8255 /* ReplayView.swift */,
+			);
+			path = Views;
+			sourceTree = "<group>";
+		};
+		6D70B3C27725A05E90E5BDA0 /* UITests */ = {
+			isa = PBXGroup;
+			children = (
+				CDFFB0CE27040C7F714C5089 /* PushFightUITests.swift */,
+			);
+			path = UITests;
+			sourceTree = "<group>";
+		};
+		88AEDF6B945A2130E691E06C /* Models */ = {
+			isa = PBXGroup;
+			children = (
+				EA5F9C26685C0C77D71511F9 /* EloStore.swift */,
+				D3DC55271A1DE17384182945 /* GameSession.swift */,
+				5C13A7E2D08474C9E11FAA4C /* HistoryStore.swift */,
+				35AC8D24F357A9E9F20DEEF7 /* MatchRecord.swift */,
+			);
+			path = Models;
+			sourceTree = "<group>";
+		};
+		95EA5A28C47F3CC90AC784C1 /* Packages */ = {
+			isa = PBXGroup;
+			children = (
+				4CA8BE05E9AD447A96A2365A /* PushFightCore */,
+			);
+			name = Packages;
+			sourceTree = "<group>";
+		};
+		A8600851AE8FE473BEFC892D /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				7D5E2937CD9247EAA5DABFDE /* PushFight.app */,
+				283440BC03D341990E04A291 /* PushFightUITests.xctest */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		BF14C9D97B17C5248183463F = {
+			isa = PBXGroup;
+			children = (
+				DFA47B5045134CE72A6AD0C5 /* App */,
+				95EA5A28C47F3CC90AC784C1 /* Packages */,
+				6D70B3C27725A05E90E5BDA0 /* UITests */,
+				A8600851AE8FE473BEFC892D /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		C2794D2AF47938E1D206D7F9 /* GameCenter */ = {
+			isa = PBXGroup;
+			children = (
+				1D41083F0E5F6C299A030B1C /* GameCenterManager.swift */,
+				166609C762E10BDE279C112A /* MatchmakerView.swift */,
+			);
+			path = GameCenter;
+			sourceTree = "<group>";
+		};
+		DFA47B5045134CE72A6AD0C5 /* App */ = {
+			isa = PBXGroup;
+			children = (
+				2F9C27948B80BA1D38A31EA4 /* PushFight.entitlements */,
+				26815918801936FCD54F2FB8 /* PushFightApp.swift */,
+				745CF9BF8BBE5AAF544EBF23 /* Theme.swift */,
+				C2794D2AF47938E1D206D7F9 /* GameCenter */,
+				88AEDF6B945A2130E691E06C /* Models */,
+				48AE18E71DFF932468A843A8 /* Views */,
+			);
+			path = App;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		66685E491634A577442318D0 /* PushFightUITests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 09A69EFC0831616DB7150E20 /* Build configuration list for PBXNativeTarget "PushFightUITests" */;
+			buildPhases = (
+				ED1A7F113BC231CF47EEF26E /* Sources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				186261C04A14B764BFD2FEFA /* PBXTargetDependency */,
+			);
+			name = PushFightUITests;
+			packageProductDependencies = (
+			);
+			productName = PushFightUITests;
+			productReference = 283440BC03D341990E04A291 /* PushFightUITests.xctest */;
+			productType = "com.apple.product-type.bundle.ui-testing";
+		};
+		70A7A2691AD08F50F94E7E75 /* PushFight */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 25B0D6BDEC45FE4D186E568A /* Build configuration list for PBXNativeTarget "PushFight" */;
+			buildPhases = (
+				1CB02C34E1118A6B39A96712 /* Sources */,
+				FA1E8FFBA539CAA2DC0619E9 /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = PushFight;
+			packageProductDependencies = (
+				89CBB486D22B6708904AE11B /* PushFightCore */,
+			);
+			productName = PushFight;
+			productReference = 7D5E2937CD9247EAA5DABFDE /* PushFight.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		4350CBBA8446DDBEB040A0C5 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = YES;
+				LastUpgradeCheck = 1430;
+				TargetAttributes = {
+					66685E491634A577442318D0 = {
+						TestTargetID = 70A7A2691AD08F50F94E7E75;
+					};
+				};
+			};
+			buildConfigurationList = 5C1298EDE0D3008D0B0A46C7 /* Build configuration list for PBXProject "PushFight" */;
+			compatibilityVersion = "Xcode 14.0";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				Base,
+				en,
+			);
+			mainGroup = BF14C9D97B17C5248183463F;
+			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				DCD8B30BDDE92CCC73AA2C5B /* XCLocalSwiftPackageReference "PushFightCore" */,
+			);
+			preferredProjectObjectVersion = 54;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				70A7A2691AD08F50F94E7E75 /* PushFight */,
+				66685E491634A577442318D0 /* PushFightUITests */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXSourcesBuildPhase section */
+		1CB02C34E1118A6B39A96712 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				9B45ED438AB724EBDC82D055 /* BoardView.swift in Sources */,
+				A9AAB7831DB5FB61A199244E /* EloStore.swift in Sources */,
+				1713B70DA43A1A6EEA5E1AFC /* GameCenterManager.swift in Sources */,
+				F74A52E18F12DAC085BEFD3D /* GameSession.swift in Sources */,
+				40B7A06658E457C1F660DA8F /* GameView.swift in Sources */,
+				BB2E3ADF649D427BD3EAD3C2 /* HistoryStore.swift in Sources */,
+				A9E2983C1431BD0B251E9BA6 /* HistoryView.swift in Sources */,
+				61E5B527E5E15B23A5495615 /* HomeView.swift in Sources */,
+				9D0BF0F45939E272D26C83FA /* MatchRecord.swift in Sources */,
+				732BEAAA6998DECC82C0B07C /* MatchmakerView.swift in Sources */,
+				64ACBF1C34E66EB251CBBEA1 /* PushFightApp.swift in Sources */,
+				77D6E60F9CEC4487F253B38C /* ReplayView.swift in Sources */,
+				AE9B9188D06FD0D01F4A2F65 /* Theme.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		ED1A7F113BC231CF47EEF26E /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				7D710F36030847C1314EE916 /* PushFightUITests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		186261C04A14B764BFD2FEFA /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 70A7A2691AD08F50F94E7E75 /* PushFight */;
+			targetProxy = FD2E24077C8A20FEC3B34169 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin XCBuildConfiguration section */
+		0E121E92D833C6F67EC02928 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
+		2CF0807C19D18C307D859B76 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.sank.PushFightUITests;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_TARGET_NAME = PushFight;
+			};
+			name = Debug;
+		};
+		4892D65F8AC0773D3AA2599B /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"$(inherited)",
+					"DEBUG=1",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
+		5D2CE19D9C791F1F92DB4D36 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = App/PushFight.entitlements;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = "Push Fight";
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = UIInterfaceOrientationPortrait;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 0.1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.sank.pushfight;
+				SDKROOT = iphoneos;
+				SWIFT_VERSION = 5.10;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		9D3A5ED5E52D1F85F0D730B1 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = App/PushFight.entitlements;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = "Push Fight";
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = UIInterfaceOrientationPortrait;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 0.1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.sank.pushfight;
+				SDKROOT = iphoneos;
+				SWIFT_VERSION = 5.10;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		9E1C697A48CA8CC587091DFB /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.sank.PushFightUITests;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_TARGET_NAME = PushFight;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		09A69EFC0831616DB7150E20 /* Build configuration list for PBXNativeTarget "PushFightUITests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				2CF0807C19D18C307D859B76 /* Debug */,
+				9E1C697A48CA8CC587091DFB /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		25B0D6BDEC45FE4D186E568A /* Build configuration list for PBXNativeTarget "PushFight" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				9D3A5ED5E52D1F85F0D730B1 /* Debug */,
+				5D2CE19D9C791F1F92DB4D36 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		5C1298EDE0D3008D0B0A46C7 /* Build configuration list for PBXProject "PushFight" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				4892D65F8AC0773D3AA2599B /* Debug */,
+				0E121E92D833C6F67EC02928 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+/* End XCConfigurationList section */
+
+/* Begin XCLocalSwiftPackageReference section */
+		DCD8B30BDDE92CCC73AA2C5B /* XCLocalSwiftPackageReference "PushFightCore" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = PushFightCore;
+		};
+/* End XCLocalSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		89CBB486D22B6708904AE11B /* PushFightCore */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = PushFightCore;
+		};
+/* End XCSwiftPackageProductDependency section */
+	};
+	rootObject = 4350CBBA8446DDBEB040A0C5 /* Project object */;
+}
