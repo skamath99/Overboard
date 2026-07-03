@@ -3,6 +3,12 @@ import PushFightCore
 
 /// Renders the board, pieces, rails, anchor, and interaction highlights.
 /// Pure function of its inputs; interaction is reported through `onTap`.
+///
+/// Drawn in portrait, chess-style: player one's half (columns a–d) is at the
+/// bottom and their pieces advance upward. Engine columns map to screen rows
+/// (a at the bottom) and engine rows map to screen columns, so the rails run
+/// down the left (rank 1) and right (rank 4) sides and pieces are pushed off
+/// the top and bottom ends.
 struct BoardView: View {
     let state: GameState
     var tracker: PieceTracker?
@@ -12,22 +18,22 @@ struct BoardView: View {
     var placementTargets: Set<Position> = []
     var onTap: ((Position) -> Void)?
 
-    private static let railSpans: [(row: Int, columns: ClosedRange<Int>, above: Bool)] = [
-        (row: 3, columns: 2...6, above: true),   // above c4–g4
-        (row: 0, columns: 1...5, above: false),  // below b1–f1
+    private static let railSpans: [(row: Int, columns: ClosedRange<Int>, outward: Bool)] = [
+        (row: 3, columns: 2...6, outward: true),   // beside c4–g4 → right side
+        (row: 0, columns: 1...5, outward: false),  // beside b1–f1 → left side
     ]
 
     var body: some View {
         GeometryReader { proxy in
-            let tile = min(proxy.size.width / 8.8, proxy.size.height / 5.6)
-            let boardWidth = tile * 8
-            let boardHeight = tile * 4
+            let tile = min(proxy.size.width / 5.6, proxy.size.height / 8.8)
+            let boardWidth = tile * 4
+            let boardHeight = tile * 8
             let originX = (proxy.size.width - boardWidth) / 2
             let originY = (proxy.size.height - boardHeight) / 2
 
             ZStack {
                 boardFrame(tile: tile)
-                    .frame(width: boardWidth + tile * 0.5, height: boardHeight + tile * 0.9)
+                    .frame(width: boardWidth + tile * 0.9, height: boardHeight + tile * 0.5)
                     .position(x: proxy.size.width / 2, y: proxy.size.height / 2)
 
                 ForEach(Board.allTiles, id: \.self) { position in
@@ -52,7 +58,7 @@ struct BoardView: View {
                 }
             }
         }
-        .aspectRatio(8.8 / 5.6, contentMode: .fit)
+        .aspectRatio(5.6 / 8.8, contentMode: .fit)
     }
 
     /// Pieces with stable identities so SwiftUI animates slides and pushes.
@@ -69,9 +75,10 @@ struct BoardView: View {
 
     private func center(of position: Position, tile: CGFloat, originX: CGFloat, originY: CGFloat) -> CGPoint {
         CGPoint(
-            x: originX + (CGFloat(position.column) + 0.5) * tile,
-            // Row 3 (rank 4) renders at the top.
-            y: originY + (CGFloat(Board.rowCount - 1 - position.row) + 0.5) * tile
+            // Rank 1 renders on the left, rank 4 on the right.
+            x: originX + (CGFloat(position.row) + 0.5) * tile,
+            // Column a renders at the bottom (player one's side).
+            y: originY + (CGFloat(Board.columnCount - 1 - position.column) + 0.5) * tile
         )
     }
 
@@ -110,15 +117,18 @@ struct BoardView: View {
         return nil
     }
 
-    private func railBar(span: (row: Int, columns: ClosedRange<Int>, above: Bool), tile: CGFloat, originX: CGFloat, originY: CGFloat) -> some View {
-        let width = tile * CGFloat(span.columns.count)
-        let midColumn = CGFloat(span.columns.lowerBound + span.columns.upperBound) / 2 + 0.5
-        let rowY = originY + (CGFloat(Board.rowCount - 1 - span.row) + 0.5) * tile
-        let offset = (span.above ? -1 : 1) * tile * 0.58
+    private func railBar(span: (row: Int, columns: ClosedRange<Int>, outward: Bool), tile: CGFloat, originX: CGFloat, originY: CGFloat) -> some View {
+        let length = tile * CGFloat(span.columns.count)
+        let midColumn = CGFloat(span.columns.lowerBound + span.columns.upperBound) / 2
+        let rowX = originX + (CGFloat(span.row) + 0.5) * tile
+        let offset = (span.outward ? 1 : -1) * tile * 0.58
         return Capsule()
             .fill(Theme.rail)
-            .frame(width: width * 0.98, height: tile * 0.13)
-            .position(x: originX + midColumn * tile, y: rowY + offset)
+            .frame(width: tile * 0.13, height: length * 0.98)
+            .position(
+                x: rowX + offset,
+                y: originY + (CGFloat(Board.columnCount - 1) - midColumn + 0.5) * tile
+            )
             .shadow(color: .black.opacity(0.3), radius: 2, y: 1)
     }
 }
