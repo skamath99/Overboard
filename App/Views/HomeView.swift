@@ -64,6 +64,14 @@ struct HomeView: View {
         } message: {
             Text(gameCenter.lastError ?? "")
         }
+        .alert("You're in the lobby", isPresented: Binding(
+            get: { gameCenter.lobbyMessage != nil },
+            set: { if !$0 { gameCenter.lobbyMessage = nil } }
+        )) {
+            Button("OK") { gameCenter.lobbyMessage = nil }
+        } message: {
+            Text(gameCenter.lobbyMessage ?? "")
+        }
         .confirmationDialog(
             "Leave this match?",
             isPresented: Binding(
@@ -94,8 +102,9 @@ struct HomeView: View {
     private var titleArt: some View {
         VStack(spacing: 8) {
             HStack(spacing: 14) {
-                PieceView(piece: Piece(owner: .one, kind: .square), hasAnchor: false, isSelected: false, size: 34)
-                PieceView(piece: Piece(owner: .two, kind: .round), hasAnchor: true, isSelected: false, size: 34)
+                // Only squares can carry the anchor — same rule as the game.
+                PieceView(piece: Piece(owner: .one, kind: .square), hasAnchor: true, isSelected: false, size: 34)
+                PieceView(piece: Piece(owner: .two, kind: .round), hasAnchor: false, isSelected: false, size: 34)
                 PieceView(piece: Piece(owner: .one, kind: .round), hasAnchor: false, isSelected: false, size: 34)
                 PieceView(piece: Piece(owner: .two, kind: .square), hasAnchor: false, isSelected: false, size: 34)
             }

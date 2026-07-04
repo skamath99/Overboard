@@ -87,9 +87,7 @@ struct GameView: View {
         HStack(spacing: 10) {
             ProgressView()
                 .tint(Theme.lastMove)
-            Text(session.interactionEnabled && session.winner == nil
-                 ? "Waiting for an opponent — finish your turn to enter the matchmaking pool."
-                 : "Waiting for an opponent to join…")
+            Text("Waiting for an opponent to join…")
                 .font(.footnote.weight(.medium))
                 .foregroundStyle(.white.opacity(0.75))
         }

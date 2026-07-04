@@ -38,7 +38,18 @@ extension GKTurnBasedMatch {
     }
 
     var otherParticipants: [GKTurnBasedParticipant] {
-        participants.filter { !Self.isLocal($0) }
+        if let mine = localParticipantIndex {
+            return participants.enumerated().filter { $0.offset != mine }.map(\.element)
+        }
+        // Our own player object can be missing right after creating a match,
+        // and only the creator can be in that state — we hold seat 0.
+        return Array(participants.dropFirst())
+    }
+
+    /// Seat 0 (the match creator) plays second: the joiner places first, so
+    /// creators can wait in the lobby without setting up a board.
+    static func side(forParticipantIndex index: Int) -> Player {
+        index == 0 ? .two : .one
     }
 
     /// False while an auto-match seat is still waiting to be filled.
@@ -97,6 +108,8 @@ final class GameCenterManager: NSObject, ObservableObject {
     @Published private(set) var openMatches: [GKTurnBasedMatch] = []
     @Published var isFindingRankedMatch = false
     @Published var lastError: String?
+    /// Shown after creating a match, while waiting for the opponent's setup.
+    @Published var lobbyMessage: String?
 
     private weak var eloStore: EloStore?
     private weak var historyStore: HistoryStore?
@@ -164,7 +177,10 @@ final class GameCenterManager: NSObject, ObservableObject {
         return request
     }
 
-    /// Opens a match into a playable session and navigates to it.
+    /// Opens a match. Creators of fresh matches don't get a board: the empty
+    /// first turn is handed straight to the opponent's seat, which is what
+    /// enters the match into Game Center's matchmaking pool. The board only
+    /// appears once it's genuinely this player's turn to act.
     func open(_ match: GKTurnBasedMatch, rankedIfNew: Bool = false) {
         var payload = OnlineMatchPayload.decode(match.matchData, ranked: rankedIfNew)
 
@@ -176,12 +192,34 @@ final class GameCenterManager: NSObject, ObservableObject {
 
         let localSide: Player
         if let index = match.localParticipantIndex {
-            localSide = index == 0 ? .one : .two
+            localSide = GKTurnBasedMatch.side(forParticipantIndex: index)
         } else {
-            // Freshly created matches sometimes lack the local participant's
-            // player object. Only the creator can be looking at an empty
-            // game, so an empty action log means we hold the first seat.
-            localSide = payload.game.actions.isEmpty ? .one : .two
+            // Identity can lag on fresh matches; only the creator (seat 0)
+            // can be looking at an empty game.
+            localSide = payload.game.actions.isEmpty ? .two : .one
+        }
+
+        // If we hold the Game Center turn but the engine's next action
+        // belongs to the other seat, pass the turn along instead of showing
+        // a board with nothing to do. For a brand-new match this is the
+        // creator handing the setup turn to the joiner.
+        let actingSide = payload.game.state.placingPlayer ?? payload.game.state.currentPlayer
+        if payload.game.winner == nil, actingSide != localSide, holdsTurn(in: match, actionsEmpty: payload.game.actions.isEmpty) {
+            let data = (try? payload.serialized()) ?? Data()
+            match.endTurn(
+                withNextParticipants: match.otherParticipants,
+                turnTimeout: GKTurnTimeoutDefault,
+                match: data
+            ) { [weak self] error in
+                Task { @MainActor in
+                    if let error { self?.lastError = error.localizedDescription }
+                    await self?.refreshOpenMatches()
+                }
+            }
+            lobbyMessage = match.hasJoinedOpponent
+                ? "Invite sent! Your friend sets up their side first — you'll be notified when it's your move."
+                : "You're in the matchmaking pool. You'll be notified when an opponent joins and sets up their side."
+            return
         }
 
         let session = GameSession(mode: .online(localSide: localSide), record: payload.game)
@@ -197,6 +235,23 @@ final class GameCenterManager: NSObject, ObservableObject {
         }
     }
 
+    /// Whether the local player currently holds the Game Center turn,
+    /// tolerating the identity quirks of freshly created matches.
+    private func holdsTurn(in match: GKTurnBasedMatch, actionsEmpty: Bool) -> Bool {
+        guard let current = match.currentParticipant else { return false }
+        if current.player != nil, GKTurnBasedMatch.isLocal(current) {
+            return true
+        }
+        // An automatch seat holding the turn means we already passed it.
+        if current.status == .matching {
+            return false
+        }
+        // Fresh match with unresolved identities: the creator always starts
+        // with the turn, and only the creator can see an empty game with no
+        // joined opponent.
+        return actionsEmpty && !match.hasJoinedOpponent
+    }
+
     // MARK: - Turn handling
 
     private func commit(_ record: GameRecord, turnEnded: Bool, in online: OnlineMatch) {
@@ -204,8 +259,8 @@ final class GameCenterManager: NSObject, ObservableObject {
         guard let data = try? online.payload.serialized() else { return }
 
         if case .finished(let winner) = record.state.phase {
-            for participant in online.match.participants {
-                let side: Player = participant == online.match.participants.first ? .one : .two
+            for (index, participant) in online.match.participants.enumerated() {
+                let side = GKTurnBasedMatch.side(forParticipantIndex: index)
                 participant.matchOutcome = side == winner ? .won : .lost
             }
             online.match.endMatchInTurn(withMatch: data) { [weak self] error in
@@ -290,7 +345,7 @@ final class GameCenterManager: NSObject, ObservableObject {
             cancelMatch(match)
             return
         }
-        let localSide: Player = (match.localParticipantIndex ?? 0) == 0 ? .one : .two
+        let localSide = GKTurnBasedMatch.side(forParticipantIndex: match.localParticipantIndex ?? 0)
         let opponentName = match.otherParticipants.first { $0.player != nil }?.player?.displayName
         recordFinishedMatch(
             matchID: match.matchID,
