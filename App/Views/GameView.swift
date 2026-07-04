@@ -5,11 +5,17 @@ import PushFightCore
 struct GameView: View {
     @ObservedObject var session: GameSession
     var opponentName: String?
+    /// False while an online match is still waiting for auto-match to fill
+    /// the second seat.
+    var opponentJoined = true
     var onResign: (() -> Void)?
+    /// Cancels an online match nobody has joined yet.
+    var onCancel: (() -> Void)?
     var onExit: () -> Void
     var onRematch: (() -> Void)?
 
     @State private var showResignConfirmation = false
+    @State private var showCancelConfirmation = false
 
     var body: some View {
         ZStack {
@@ -17,6 +23,9 @@ struct GameView: View {
 
             VStack(spacing: 18) {
                 header
+                if !opponentJoined, session.winner == nil {
+                    waitingBanner
+                }
                 BoardView(
                     state: session.state,
                     tracker: session.tracker,
@@ -47,7 +56,14 @@ struct GameView: View {
                 }
                 .tint(.white)
             }
-            if onResign != nil, session.state.phase != .placement, session.winner == nil {
+            if onCancel != nil, !opponentJoined {
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button("Cancel Match", role: .destructive) {
+                        showCancelConfirmation = true
+                    }
+                    .tint(Theme.anchor)
+                }
+            } else if onResign != nil, opponentJoined, session.winner == nil {
                 ToolbarItem(placement: .topBarTrailing) {
                     Button("Resign", role: .destructive) {
                         showResignConfirmation = true
@@ -59,6 +75,28 @@ struct GameView: View {
         .confirmationDialog("Resign this match?", isPresented: $showResignConfirmation, titleVisibility: .visible) {
             Button("Resign", role: .destructive) { onResign?() }
         }
+        .confirmationDialog("Cancel this match?", isPresented: $showCancelConfirmation, titleVisibility: .visible) {
+            Button("Cancel Match", role: .destructive) { onCancel?() }
+            Button("Keep Waiting", role: .cancel) {}
+        } message: {
+            Text("No one has joined yet. Cancelling removes the match — no result is recorded.")
+        }
+    }
+
+    private var waitingBanner: some View {
+        HStack(spacing: 10) {
+            ProgressView()
+                .tint(Theme.lastMove)
+            Text(session.interactionEnabled && session.winner == nil
+                 ? "Waiting for an opponent — finish your turn to enter the matchmaking pool."
+                 : "Waiting for an opponent to join…")
+                .font(.footnote.weight(.medium))
+                .foregroundStyle(.white.opacity(0.75))
+        }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 10)
+        .background(Capsule().fill(.white.opacity(0.08)))
+        .padding(.horizontal, 24)
     }
 
     // MARK: - Header

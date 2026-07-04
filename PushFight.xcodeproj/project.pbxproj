@@ -15,6 +15,7 @@
 		732BEAAA6998DECC82C0B07C /* MatchmakerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 166609C762E10BDE279C112A /* MatchmakerView.swift */; };
 		77D6E60F9CEC4487F253B38C /* ReplayView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1ED85B2658FA46395C6F8255 /* ReplayView.swift */; };
 		7D710F36030847C1314EE916 /* PushFightUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CDFFB0CE27040C7F714C5089 /* PushFightUITests.swift */; };
+		9168F0A1618D03791EBE5F5F /* HowToPlayView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DDECE4760A1A98E6CDDCD044 /* HowToPlayView.swift */; };
 		9B45ED438AB724EBDC82D055 /* BoardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1D44DC4B2CFFDD4F8AC1C4E7 /* BoardView.swift */; };
 		9D0BF0F45939E272D26C83FA /* MatchRecord.swift in Sources */ = {isa = PBXBuildFile; fileRef = 35AC8D24F357A9E9F20DEEF7 /* MatchRecord.swift */; };
 		A9AAB7831DB5FB61A199244E /* EloStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA5F9C26685C0C77D71511F9 /* EloStore.swift */; };
@@ -54,6 +55,7 @@
 		C84FB05956288859DC6A7E34 /* GameView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameView.swift; sourceTree = "<group>"; };
 		CDFFB0CE27040C7F714C5089 /* PushFightUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PushFightUITests.swift; sourceTree = "<group>"; };
 		D3DC55271A1DE17384182945 /* GameSession.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameSession.swift; sourceTree = "<group>"; };
+		DDECE4760A1A98E6CDDCD044 /* HowToPlayView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HowToPlayView.swift; sourceTree = "<group>"; };
 		EA5F9C26685C0C77D71511F9 /* EloStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EloStore.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -76,6 +78,7 @@
 				C84FB05956288859DC6A7E34 /* GameView.swift */,
 				305FCA0619B4ECB28ED3A3DB /* HistoryView.swift */,
 				540E55DBF8B4F2DDF1A4ADF2 /* HomeView.swift */,
+				DDECE4760A1A98E6CDDCD044 /* HowToPlayView.swift */,
 				1ED85B2658FA46395C6F8255 /* ReplayView.swift */,
 			);
 			path = Views;
@@ -255,6 +258,7 @@
 				BB2E3ADF649D427BD3EAD3C2 /* HistoryStore.swift in Sources */,
 				A9E2983C1431BD0B251E9BA6 /* HistoryView.swift in Sources */,
 				61E5B527E5E15B23A5495615 /* HomeView.swift in Sources */,
+				9168F0A1618D03791EBE5F5F /* HowToPlayView.swift in Sources */,
 				9D0BF0F45939E272D26C83FA /* MatchRecord.swift in Sources */,
 				732BEAAA6998DECC82C0B07C /* MatchmakerView.swift in Sources */,
 				64ACBF1C34E66EB251CBBEA1 /* PushFightApp.swift in Sources */,
@@ -342,6 +346,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
+				GENERATE_INFOPLIST_FILE = YES;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -349,6 +354,7 @@
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = com.sank.PushFightUITests;
 				SDKROOT = iphoneos;
+				SWIFT_VERSION = 5.10;
 				TARGETED_DEVICE_FAMILY = "1,2";
 				TEST_TARGET_NAME = PushFight;
 			};
@@ -471,6 +477,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
+				GENERATE_INFOPLIST_FILE = YES;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -478,6 +485,7 @@
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = com.sank.PushFightUITests;
 				SDKROOT = iphoneos;
+				SWIFT_VERSION = 5.10;
 				TARGETED_DEVICE_FAMILY = "1,2";
 				TEST_TARGET_NAME = PushFight;
 			};

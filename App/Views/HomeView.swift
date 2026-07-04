@@ -9,6 +9,7 @@ struct HomeView: View {
 
     @State private var localSession: GameSession?
     @State private var showFriendMatchmaker = false
+    @State private var matchPendingRemoval: GKTurnBasedMatch?
 
     var body: some View {
         ZStack {
@@ -46,7 +47,9 @@ struct HomeView: View {
             GameView(
                 session: online.session,
                 opponentName: online.opponentName,
+                opponentJoined: online.opponentJoined,
                 onResign: { gameCenter.resign(online) },
+                onCancel: { gameCenter.cancelMatch(online.match) },
                 onExit: { gameCenter.activeMatch = nil }
             )
         }
@@ -60,6 +63,26 @@ struct HomeView: View {
             Button("OK") { gameCenter.lastError = nil }
         } message: {
             Text(gameCenter.lastError ?? "")
+        }
+        .confirmationDialog(
+            "Leave this match?",
+            isPresented: Binding(
+                get: { matchPendingRemoval != nil },
+                set: { if !$0 { matchPendingRemoval = nil } }
+            ),
+            titleVisibility: .visible
+        ) {
+            Button(removalIsResignation ? "Resign & Remove" : "Cancel Match", role: .destructive) {
+                if let match = matchPendingRemoval {
+                    gameCenter.abandon(match)
+                }
+                matchPendingRemoval = nil
+            }
+            Button("Keep Match", role: .cancel) { matchPendingRemoval = nil }
+        } message: {
+            Text(removalIsResignation
+                 ? "An opponent has joined, so leaving counts as a resignation."
+                 : "No one has joined this match yet. It will be removed without a result.")
         }
         .task {
             await gameCenter.refreshOpenMatches()
@@ -159,6 +182,13 @@ struct HomeView: View {
                 Label("Match History", systemImage: "clock.arrow.circlepath")
             }
             .buttonStyle(MenuButtonStyle())
+
+            NavigationLink {
+                HowToPlayView()
+            } label: {
+                Label("How to Play", systemImage: "book.fill")
+            }
+            .buttonStyle(MenuButtonStyle())
         }
     }
 
@@ -169,10 +199,19 @@ struct HomeView: View {
                 .foregroundStyle(.white.opacity(0.5))
                 .kerning(1)
             ForEach(gameCenter.openMatches, id: \.matchID) { match in
-                Button {
-                    gameCenter.open(match)
-                } label: {
-                    OpenMatchRow(match: match)
+                HStack(spacing: 8) {
+                    Button {
+                        gameCenter.open(match)
+                    } label: {
+                        OpenMatchRow(match: match)
+                    }
+                    Button {
+                        matchPendingRemoval = match
+                    } label: {
+                        Image(systemName: "xmark.circle.fill")
+                            .font(.title3)
+                            .foregroundStyle(.white.opacity(0.4))
+                    }
                 }
             }
         }
@@ -180,6 +219,11 @@ struct HomeView: View {
     }
 
     // MARK: - Helpers
+
+    private var removalIsResignation: Bool {
+        guard let match = matchPendingRemoval else { return false }
+        return match.status != .ended && match.hasJoinedOpponent
+    }
 
     private var activeMatchBinding: Binding<OnlineMatch?> {
         Binding(

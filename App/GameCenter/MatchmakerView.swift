@@ -10,7 +10,9 @@ struct MatchmakerView: UIViewControllerRepresentable {
 
     func makeUIViewController(context: Context) -> GKTurnBasedMatchmakerViewController {
         let controller = GKTurnBasedMatchmakerViewController(matchRequest: request)
-        controller.showExistingMatches = true
+        // Straight to the invite flow — the home screen already lists
+        // existing games.
+        controller.showExistingMatches = false
         controller.turnBasedMatchmakerDelegate = context.coordinator
         return controller
     }

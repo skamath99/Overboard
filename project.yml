@@ -40,3 +40,7 @@ targets:
       - UITests
     dependencies:
       - target: PushFight
+    settings:
+      base:
+        GENERATE_INFOPLIST_FILE: YES
+        SWIFT_VERSION: "5.10"

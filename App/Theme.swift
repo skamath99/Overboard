@@ -8,8 +8,9 @@ enum Theme {
         startPoint: .top, endPoint: .bottom
     )
     static let boardFrame = Color(hex: 0x2A3247)
-    static let tile = Color(hex: 0xE9E2D0)
-    static let tileAlt = Color(hex: 0xDDD4BE)
+    // Slate blue-gray tiles: distinct from both the ivory and walnut pieces.
+    static let tile = Color(hex: 0xAEB7C7)
+    static let tileAlt = Color(hex: 0xA1ABBD)
     static let rail = Color(hex: 0x8A93AB)
     static let moveHighlight = Color(hex: 0x4CA3FF)
     static let pushHighlight = Color(hex: 0xFF8A5C)

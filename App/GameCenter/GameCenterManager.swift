@@ -24,20 +24,45 @@ struct OnlineMatchPayload: Codable {
     }
 }
 
+extension GKTurnBasedMatch {
+    /// Player-ID comparison alone is unreliable in the sandbox, so compare
+    /// both scoped identifiers.
+    nonisolated static func isLocal(_ participant: GKTurnBasedParticipant) -> Bool {
+        guard let player = participant.player else { return false }
+        return player.gamePlayerID == GKLocalPlayer.local.gamePlayerID
+            || player.teamPlayerID == GKLocalPlayer.local.teamPlayerID
+    }
+
+    var localParticipantIndex: Int? {
+        participants.firstIndex { Self.isLocal($0) }
+    }
+
+    var otherParticipants: [GKTurnBasedParticipant] {
+        participants.filter { !Self.isLocal($0) }
+    }
+
+    /// False while an auto-match seat is still waiting to be filled.
+    var hasJoinedOpponent: Bool {
+        otherParticipants.contains { $0.player != nil }
+    }
+}
+
 /// An online game the UI is currently showing.
 @MainActor
 final class OnlineMatch: Identifiable, Hashable {
-    let match: GKTurnBasedMatch
+    private(set) var match: GKTurnBasedMatch
     let session: GameSession
     let localSide: Player
     var payload: OnlineMatchPayload
 
     nonisolated let id: String
 
+    var opponentJoined: Bool {
+        match.hasJoinedOpponent
+    }
+
     var opponentName: String {
-        match.participants
-            .first { $0.player?.gamePlayerID != GKLocalPlayer.local.gamePlayerID }?
-            .player?.displayName ?? "Opponent"
+        match.otherParticipants.first { $0.player != nil }?.player?.displayName ?? "Opponent"
     }
 
     init(match: GKTurnBasedMatch, session: GameSession, localSide: Player, payload: OnlineMatchPayload) {
@@ -46,6 +71,13 @@ final class OnlineMatch: Identifiable, Hashable {
         self.session = session
         self.localSide = localSide
         self.payload = payload
+    }
+
+    /// Turn events deliver a fresh match object; keep ours current so
+    /// participant state (like a newly joined opponent) is visible.
+    func update(from match: GKTurnBasedMatch) {
+        guard match.matchID == id else { return }
+        self.match = match
     }
 
     nonisolated static func == (lhs: OnlineMatch, rhs: OnlineMatch) -> Bool {
@@ -142,9 +174,15 @@ final class GameCenterManager: NSObject, ObservableObject {
             payload.ratings[myID] = eloStore.rating
         }
 
-        let localSide: Player = match.participants.firstIndex {
-            $0.player?.gamePlayerID == myID
-        } == 0 ? .one : .two
+        let localSide: Player
+        if let index = match.localParticipantIndex {
+            localSide = index == 0 ? .one : .two
+        } else {
+            // Freshly created matches sometimes lack the local participant's
+            // player object. Only the creator can be looking at an empty
+            // game, so an empty action log means we hold the first seat.
+            localSide = payload.game.actions.isEmpty ? .one : .two
+        }
 
         let session = GameSession(mode: .online(localSide: localSide), record: payload.game)
         let online = OnlineMatch(match: match, session: session, localSide: localSide, payload: payload)
@@ -181,9 +219,7 @@ final class GameCenterManager: NSObject, ObservableObject {
         }
 
         if turnEnded {
-            let others = online.match.participants.filter {
-                $0.player?.gamePlayerID != GKLocalPlayer.local.gamePlayerID
-            }
+            let others = online.match.otherParticipants
             online.match.endTurn(
                 withNextParticipants: others,
                 turnTimeout: GKTurnTimeoutDefault,
@@ -202,7 +238,7 @@ final class GameCenterManager: NSObject, ObservableObject {
 
     func resign(_ online: OnlineMatch) {
         let data = (try? online.payload.serialized()) ?? Data()
-        let isMyTurn = online.match.currentParticipant?.player?.gamePlayerID == GKLocalPlayer.local.gamePlayerID
+        let isMyTurn = online.match.currentParticipant.map { GKTurnBasedMatch.isLocal($0) } ?? false
         let completion: (Error?) -> Void = { [weak self] error in
             Task { @MainActor in
                 if let error { self?.lastError = error.localizedDescription }
@@ -212,15 +248,58 @@ final class GameCenterManager: NSObject, ObservableObject {
             }
         }
         if isMyTurn {
-            let others = online.match.participants.filter {
-                $0.player?.gamePlayerID != GKLocalPlayer.local.gamePlayerID
-            }
             online.match.participantQuitInTurn(
-                with: .quit, nextParticipants: others, turnTimeout: GKTurnTimeoutDefault, match: data, completionHandler: completion
+                with: .quit, nextParticipants: online.match.otherParticipants, turnTimeout: GKTurnTimeoutDefault, match: data, completionHandler: completion
             )
         } else {
             online.match.participantQuitOutOfTurn(with: .quit, withCompletionHandler: completion)
         }
+    }
+
+    /// Cancels a match nobody has joined (or cleans up a finished one):
+    /// quits if needed, removes it from Game Center, and records nothing.
+    func cancelMatch(_ match: GKTurnBasedMatch) {
+        if activeMatch?.id == match.matchID {
+            activeMatch = nil
+        }
+        let finish: () -> Void = { [weak self] in
+            match.remove { _ in
+                Task { @MainActor in await self?.refreshOpenMatches() }
+            }
+        }
+        let isMyTurn = match.currentParticipant.map { GKTurnBasedMatch.isLocal($0) } ?? false
+        if match.status != .ended, isMyTurn {
+            match.participantQuitInTurn(
+                with: .quit,
+                nextParticipants: match.otherParticipants,
+                turnTimeout: GKTurnTimeoutDefault,
+                match: match.matchData ?? Data()
+            ) { _ in finish() }
+        } else {
+            finish()
+        }
+    }
+
+    /// Leaves any open match from the home list. A live game against a real
+    /// opponent counts as a resignation (with Elo applied if ranked);
+    /// anything else is just cancelled and removed.
+    func abandon(_ match: GKTurnBasedMatch) {
+        let payload = OnlineMatchPayload.decode(match.matchData)
+        let live = match.status != .ended && payload.game.winner == nil && match.hasJoinedOpponent
+        guard live else {
+            cancelMatch(match)
+            return
+        }
+        let localSide: Player = (match.localParticipantIndex ?? 0) == 0 ? .one : .two
+        let opponentName = match.otherParticipants.first { $0.player != nil }?.player?.displayName
+        recordFinishedMatch(
+            matchID: match.matchID,
+            payload: payload,
+            localSide: localSide,
+            opponentName: opponentName,
+            localWon: false
+        )
+        cancelMatch(match)
     }
 
     func refreshOpenMatches() async {
@@ -241,13 +320,29 @@ final class GameCenterManager: NSObject, ObservableObject {
     }
 
     private func recordFinishedMatch(_ online: OnlineMatch, localWon: Bool) {
+        recordFinishedMatch(
+            matchID: online.match.matchID,
+            payload: online.payload,
+            localSide: online.localSide,
+            opponentName: online.opponentName,
+            localWon: localWon
+        )
+    }
+
+    private func recordFinishedMatch(
+        matchID: String,
+        payload: OnlineMatchPayload,
+        localSide: Player,
+        opponentName: String?,
+        localWon: Bool
+    ) {
         guard let historyStore else { return }
-        let recordID = UUID(deterministicFrom: online.match.matchID)
+        let recordID = UUID(deterministicFrom: matchID)
         guard !historyStore.matches.contains(where: { $0.id == recordID }) else { return }
 
         var eloChange: Int?
-        if online.payload.ranked, let eloStore {
-            let opponentRating = online.payload.ratings.first {
+        if payload.ranked, let eloStore {
+            let opponentRating = payload.ratings.first {
                 $0.key != GKLocalPlayer.local.gamePlayerID
             }?.value ?? Elo.defaultRating
             eloChange = eloStore.recordRankedGame(won: localWon, opponentRating: opponentRating)
@@ -256,10 +351,10 @@ final class GameCenterManager: NSObject, ObservableObject {
         historyStore.add(MatchRecord(
             id: recordID,
             date: Date(),
-            mode: online.payload.ranked ? .ranked : .friend,
-            game: online.payload.game,
-            localSide: online.localSide,
-            opponentName: online.opponentName,
+            mode: payload.ranked ? .ranked : .friend,
+            game: payload.game,
+            localSide: localSide,
+            opponentName: opponentName ?? "Opponent",
             eloChange: eloChange
         ))
     }
@@ -270,7 +365,8 @@ final class GameCenterManager: NSObject, ObservableObject {
 extension GameCenterManager: GKLocalPlayerListener {
     nonisolated func player(_ player: GKPlayer, receivedTurnEventFor match: GKTurnBasedMatch, didBecomeActive: Bool) {
         Task { @MainActor in
-            if let active = activeMatch, active.match.matchID == match.matchID {
+            if let active = activeMatch, active.id == match.matchID {
+                active.update(from: match)
                 let payload = OnlineMatchPayload.decode(match.matchData, ranked: active.payload.ranked)
                 active.payload = payload
                 active.session.sync(to: payload.game)
@@ -285,7 +381,8 @@ extension GameCenterManager: GKLocalPlayerListener {
     nonisolated func player(_ player: GKPlayer, matchEnded match: GKTurnBasedMatch) {
         Task { @MainActor in
             let ranked = OnlineMatchPayload.decode(match.matchData).ranked
-            if let active = activeMatch, active.match.matchID == match.matchID {
+            if let active = activeMatch, active.id == match.matchID {
+                active.update(from: match)
                 active.payload = OnlineMatchPayload.decode(match.matchData, ranked: ranked)
                 active.session.sync(to: active.payload.game)
                 if let winner = active.payload.game.winner {
