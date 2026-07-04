@@ -199,19 +199,11 @@ struct HomeView: View {
                 .foregroundStyle(.white.opacity(0.5))
                 .kerning(1)
             ForEach(gameCenter.openMatches, id: \.matchID) { match in
-                HStack(spacing: 8) {
-                    Button {
-                        gameCenter.open(match)
-                    } label: {
-                        OpenMatchRow(match: match)
-                    }
-                    Button {
-                        matchPendingRemoval = match
-                    } label: {
-                        Image(systemName: "xmark.circle.fill")
-                            .font(.title3)
-                            .foregroundStyle(.white.opacity(0.4))
-                    }
+                SwipeableRow(
+                    onTap: { gameCenter.open(match) },
+                    onLeave: { matchPendingRemoval = match }
+                ) {
+                    OpenMatchRow(match: match)
                 }
             }
         }
@@ -250,6 +242,68 @@ struct HomeView: View {
             opponentName: nil,
             eloChange: nil
         ))
+    }
+}
+
+/// Swipe left to reveal a Leave action — List-style swipe behaviour for
+/// rows living inside a plain ScrollView.
+private struct SwipeableRow<Content: View>: View {
+    let onTap: () -> Void
+    let onLeave: () -> Void
+    @ViewBuilder let content: Content
+
+    @State private var offset: CGFloat = 0
+    @State private var isRevealed = false
+    private let revealWidth: CGFloat = 88
+
+    var body: some View {
+        ZStack(alignment: .trailing) {
+            Button(action: onLeave) {
+                VStack(spacing: 4) {
+                    Image(systemName: "rectangle.portrait.and.arrow.right")
+                        .font(.body.weight(.semibold))
+                    Text("Leave")
+                        .font(.caption2.weight(.semibold))
+                }
+                .foregroundStyle(.white)
+                .frame(width: revealWidth)
+                .frame(maxHeight: .infinity)
+                .background(
+                    RoundedRectangle(cornerRadius: 14, style: .continuous)
+                        .fill(Theme.anchor)
+                )
+            }
+            .opacity(offset < -12 ? 1 : 0)
+
+            Button {
+                isRevealed ? close() : onTap()
+            } label: {
+                content
+            }
+            .offset(x: offset)
+        }
+        .gesture(
+            DragGesture(minimumDistance: 20)
+                .onChanged { value in
+                    guard abs(value.translation.width) > abs(value.translation.height) else { return }
+                    let base: CGFloat = isRevealed ? -revealWidth : 0
+                    offset = min(0, max(-revealWidth - 24, base + value.translation.width))
+                }
+                .onEnded { value in
+                    let settled = (isRevealed ? -revealWidth : 0) + value.translation.width
+                    withAnimation(.spring(duration: 0.3)) {
+                        isRevealed = settled < -revealWidth / 2
+                        offset = isRevealed ? -revealWidth : 0
+                    }
+                }
+        )
+    }
+
+    private func close() {
+        withAnimation(.spring(duration: 0.3)) {
+            offset = 0
+            isRevealed = false
+        }
     }
 }
 
