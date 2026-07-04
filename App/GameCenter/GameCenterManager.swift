@@ -128,7 +128,7 @@ final class GameCenterManager: NSObject, ObservableObject {
         let request = GKMatchRequest()
         request.minPlayers = 2
         request.maxPlayers = 2
-        request.inviteMessage = "Let's play Push Fight!"
+        request.inviteMessage = "Let's play Overboard!"
         return request
     }
 

@@ -76,7 +76,7 @@ struct HomeView: View {
                 PieceView(piece: Piece(owner: .one, kind: .round), hasAnchor: false, isSelected: false, size: 34)
                 PieceView(piece: Piece(owner: .two, kind: .square), hasAnchor: false, isSelected: false, size: 34)
             }
-            Text("PUSH FIGHT")
+            Text("OVERBOARD!")
                 .font(.system(size: 40, weight: .black, design: .rounded))
                 .foregroundStyle(.white)
                 .kerning(2)

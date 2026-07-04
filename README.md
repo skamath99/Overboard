@@ -1,6 +1,6 @@
-# PushFight iOS
+# Overboard! (PushFight iOS)
 
-A native iOS app for playing [Push Fight](https://pushfightgame.com/) with friends, built with SwiftUI and Game Center turn-based matches. Successor to the earlier React Native + Firebase attempt (PushFight / PushFightFirebase / PushFightLibrary), consolidated into this single repo with **no backend**.
+**Overboard!** is a native iOS app for playing the abstract board game popularized as [Push Fight](https://pushfightgame.com/) with friends, built with SwiftUI and Game Center turn-based matches. The public-facing name is Overboard! (App Store Connect app 6787431568, bundle ID `com.sank.pushfight`); internal code and this repo keep the PushFight naming. Successor to the earlier React Native + Firebase attempt (PushFight / PushFightFirebase / PushFightLibrary), consolidated into this single repo with **no backend**.
 
 ## Features
 
@@ -42,13 +42,13 @@ xcodebuild test -project PushFight.xcodeproj -scheme PushFight \
 
 If `swift test` fails with a manifest/linker error, the active toolchain is Command Line Tools; prefix commands with `DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer` (or run `sudo xcode-select -s /Applications/Xcode.app`).
 
-### Game Center setup (one-time, for online play)
+### Game Center setup (done — July 2026)
 
-1. In Xcode, set your development team on the PushFight target.
-2. Create the app record in App Store Connect with bundle ID `com.sank.pushfight` and enable Game Center.
-3. Add a leaderboard with ID `pushfight.elo` (classic, most-recent-score) for Elo mirroring.
+- Bundle ID `com.sank.pushfight` registered with the Game Center capability (team 547M5QUW76, set in project.yml).
+- App Store Connect app **Overboard!** (ID 6787431568).
+- Leaderboard `pushfight.elo`: classic, integer, most-recent-score, high-to-low, range 0–4000, localized as "Elo Rating" (en-US).
 
-Local pass-and-play works in the simulator with no setup.
+To play online in the simulator/device, sign into Game Center in Settings (sandbox account while in development). Local pass-and-play works with no setup.
 
 ## The board
 

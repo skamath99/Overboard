@@ -203,6 +203,9 @@
 					66685E491634A577442318D0 = {
 						TestTargetID = 70A7A2691AD08F50F94E7E75;
 					};
+					70A7A2691AD08F50F94E7E75 = {
+						DevelopmentTeam = 547M5QUW76;
+					};
 				};
 			};
 			buildConfigurationList = 5C1298EDE0D3008D0B0A46C7 /* Build configuration list for PBXProject "PushFight" */;
@@ -421,8 +424,9 @@
 				CODE_SIGN_ENTITLEMENTS = App/PushFight.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 547M5QUW76;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_KEY_CFBundleDisplayName = "Push Fight";
+				INFOPLIST_KEY_CFBundleDisplayName = "Overboard!";
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = UIInterfaceOrientationPortrait;
@@ -445,8 +449,9 @@
 				CODE_SIGN_ENTITLEMENTS = App/PushFight.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 547M5QUW76;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_KEY_CFBundleDisplayName = "Push Fight";
+				INFOPLIST_KEY_CFBundleDisplayName = "Overboard!";
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = UIInterfaceOrientationPortrait;
