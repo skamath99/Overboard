@@ -44,6 +44,68 @@ final class PushFightUITests: XCTestCase {
         saveScreenshot("game-after-push")
     }
 
+    /// Marketing screenshots: the home page and a lively mid-game position
+    /// with both anchors having moved and no selection highlights.
+    func testMarketingScreenshots() throws {
+        let app = XCUIApplication()
+        app.launch()
+
+        let passAndPlay = app.buttons["Pass & Play"].firstMatch
+        XCTAssertTrue(passAndPlay.waitForExistence(timeout: 5))
+        Thread.sleep(forTimeInterval: 1.5)
+        saveScreenshot("shot-home")
+
+        passAndPlay.tap()
+        let status = app.staticTexts["game-status"]
+        XCTAssertTrue(status.waitForExistence(timeout: 5))
+
+        for tile in ["d2", "d3", "d1", "c2", "c3", "e2", "e3", "e1", "f2", "f3"] {
+            tapTile(app, tile)
+        }
+        // Ivory shoves the centre line; Walnut answers with a flank push.
+        tapTile(app, "d2")
+        tapTile(app, "e2")
+        tapTile(app, "f2")
+        tapTile(app, "f3")
+        XCTAssertTrue(status.label.contains("Ivory"), "Should be Ivory's turn, got: \(status.label)")
+        Thread.sleep(forTimeInterval: 1.0)
+        saveScreenshot("shot-game")
+    }
+
+    /// Regression: finished games must open from Match History instead of
+    /// bouncing straight back to the list.
+    func testHistoryReplayOpens() throws {
+        let app = XCUIApplication()
+        app.launch()
+
+        app.buttons["Pass & Play"].firstMatch.tap()
+        let status = app.staticTexts["game-status"]
+        XCTAssertTrue(status.waitForExistence(timeout: 5))
+
+        // Fast win: Ivory pushes its own round off the open left edge.
+        for tile in ["b2", "c1", "d1", "a2", "a3", "e2", "f2", "g2", "f3", "g3"] {
+            tapTile(app, tile)
+        }
+        tapTile(app, "b2")
+        tapTile(app, "a2")
+        XCTAssertTrue(status.label.contains("wins"), "Game should be over, got: \(status.label)")
+
+        app.buttons["Done"].firstMatch.tap()
+        XCTAssertTrue(app.buttons["Match History"].firstMatch.waitForExistence(timeout: 5))
+        app.buttons["Match History"].firstMatch.tap()
+
+        let row = app.staticTexts["Walnut won"].firstMatch
+        XCTAssertTrue(row.waitForExistence(timeout: 5), "History row should exist")
+        row.tap()
+
+        // The replay screen has the scrubber; it must still be there after
+        // the push animation settles (no bounce-back).
+        let slider = app.sliders.firstMatch
+        XCTAssertTrue(slider.waitForExistence(timeout: 5), "Replay scrubber should appear")
+        Thread.sleep(forTimeInterval: 1.5)
+        XCTAssertTrue(slider.exists, "Replay screen must not pop back to the list")
+    }
+
     /// Writes a screenshot to the host filesystem (simulator only) so design
     /// can be reviewed without driving the app manually.
     private func saveScreenshot(_ name: String) {

@@ -17,7 +17,12 @@ struct HistoryView: View {
             } else {
                 List {
                     ForEach(history.matches) { match in
-                        NavigationLink(value: match) {
+                        // View-destination link: the rest of the app navigates
+                        // view-based, and mixing in value-based links makes
+                        // the pushed screen pop straight back.
+                        NavigationLink {
+                            ReplayView(match: match)
+                        } label: {
                             HistoryRow(match: match)
                         }
                         .listRowBackground(Color.white.opacity(0.06))
@@ -28,15 +33,7 @@ struct HistoryView: View {
             }
         }
         .navigationTitle("Match History")
-        .navigationDestination(for: MatchRecord.self) { match in
-            ReplayView(match: match)
-        }
     }
-}
-
-extension MatchRecord: Hashable {
-    static func == (lhs: MatchRecord, rhs: MatchRecord) -> Bool { lhs.id == rhs.id }
-    func hash(into hasher: inout Hasher) { hasher.combine(id) }
 }
 
 private struct HistoryRow: View {
