@@ -11,8 +11,9 @@ struct MatchmakerView: UIViewControllerRepresentable {
     func makeUIViewController(context: Context) -> GKTurnBasedMatchmakerViewController {
         let controller = GKTurnBasedMatchmakerViewController(matchRequest: request)
         // Straight to the invite flow — the home screen already lists
-        // existing games.
+        // existing games, and we want the friend picker, not automatch.
         controller.showExistingMatches = false
+        controller.matchmakingMode = .inviteOnly
         controller.turnBasedMatchmakerDelegate = context.coordinator
         return controller
     }

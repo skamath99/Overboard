@@ -9,16 +9,45 @@ struct OnlineMatchPayload: Codable {
     var ranked: Bool
     /// Self-reported Elo by `gamePlayerID`, exchanged for rating updates.
     var ratings: [String: Int]
+    /// Which side the match creator (seat 0) plays. Randomized per match so
+    /// both clients agree; defaults to `.two` for matches created before this
+    /// field existed.
+    var seatZeroSide: Player
+
+    init(game: GameRecord, ranked: Bool, ratings: [String: Int], seatZeroSide: Player = .two) {
+        self.game = game
+        self.ranked = ranked
+        self.ratings = ratings
+        self.seatZeroSide = seatZeroSide
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case game, ranked, ratings, seatZeroSide
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        game = try container.decode(GameRecord.self, forKey: .game)
+        ranked = try container.decode(Bool.self, forKey: .ranked)
+        ratings = try container.decode([String: Int].self, forKey: .ratings)
+        seatZeroSide = try container.decodeIfPresent(Player.self, forKey: .seatZeroSide) ?? .two
+    }
 
     func serialized() throws -> Data {
         try JSONEncoder().encode(self)
+    }
+
+    /// Seat 0 (the creator) plays `seatZeroSide`; the other seat plays its
+    /// opponent.
+    func side(forParticipantIndex index: Int) -> Player {
+        index == 0 ? seatZeroSide : seatZeroSide.opponent
     }
 
     static func decode(_ data: Data?, ranked fallbackRanked: Bool = false) -> OnlineMatchPayload {
         guard let data, !data.isEmpty,
               let payload = try? JSONDecoder().decode(OnlineMatchPayload.self, from: data)
         else {
-            return OnlineMatchPayload(game: GameRecord(), ranked: fallbackRanked, ratings: [:])
+            return OnlineMatchPayload(game: GameRecord(), ranked: fallbackRanked, ratings: [:], seatZeroSide: .two)
         }
         return payload
     }
@@ -44,12 +73,6 @@ extension GKTurnBasedMatch {
         // Our own player object can be missing right after creating a match,
         // and only the creator can be in that state — we hold seat 0.
         return Array(participants.dropFirst())
-    }
-
-    /// Seat 0 (the match creator) plays second: the joiner places first, so
-    /// creators can wait in the lobby without setting up a board.
-    static func side(forParticipantIndex index: Int) -> Player {
-        index == 0 ? .two : .one
     }
 
     /// False while an auto-match seat is still waiting to be filled.
@@ -110,6 +133,8 @@ final class GameCenterManager: NSObject, ObservableObject {
     @Published var lastError: String?
     /// Shown after creating a match, while waiting for the opponent's setup.
     @Published var lobbyMessage: String?
+    /// One-off announcement (e.g. an opponent resigning the active game).
+    @Published var notice: String?
 
     private weak var eloStore: EloStore?
     private weak var historyStore: HistoryStore?
@@ -184,6 +209,13 @@ final class GameCenterManager: NSObject, ObservableObject {
     func open(_ match: GKTurnBasedMatch, rankedIfNew: Bool = false) {
         var payload = OnlineMatchPayload.decode(match.matchData, ranked: rankedIfNew)
 
+        // Brand-new match (no data written yet): pick which side the creator
+        // plays so both clients agree once we save the payload.
+        let isFreshMatch = match.matchData?.isEmpty ?? true
+        if isFreshMatch {
+            payload.seatZeroSide = Bool.random() ? .one : .two
+        }
+
         // Register our rating the first time we touch a ranked match.
         let myID = GKLocalPlayer.local.gamePlayerID
         if payload.ranked, payload.ratings[myID] == nil, let eloStore {
@@ -192,11 +224,11 @@ final class GameCenterManager: NSObject, ObservableObject {
 
         let localSide: Player
         if let index = match.localParticipantIndex {
-            localSide = GKTurnBasedMatch.side(forParticipantIndex: index)
+            localSide = payload.side(forParticipantIndex: index)
         } else {
             // Identity can lag on fresh matches; only the creator (seat 0)
             // can be looking at an empty game.
-            localSide = payload.game.actions.isEmpty ? .two : .one
+            localSide = payload.side(forParticipantIndex: payload.game.actions.isEmpty ? 0 : 1)
         }
 
         // If we hold the Game Center turn but the engine's next action
@@ -212,7 +244,11 @@ final class GameCenterManager: NSObject, ObservableObject {
                 match: data
             ) { [weak self] error in
                 Task { @MainActor in
-                    if let error { self?.lastError = error.localizedDescription }
+                    // Tapping a stale row can re-pass a turn we no longer own;
+                    // those turn-state errors are benign and shouldn't alert.
+                    if let error, !Self.isBenignTurnError(error) {
+                        self?.lastError = error.localizedDescription
+                    }
                     await self?.refreshOpenMatches()
                 }
             }
@@ -230,8 +266,39 @@ final class GameCenterManager: NSObject, ObservableObject {
         }
         activeMatch = online
 
+        // Persist a fresh match's payload right away so the randomized
+        // `seatZeroSide` is committed before the creator's first move. Without
+        // this, a friend accepting in that window would decode empty data and
+        // fall back to `.two`, diverging from the creator. Only for empty
+        // match data, so we never clobber an existing game.
+        if isFreshMatch, let data = try? payload.serialized() {
+            match.saveCurrentTurn(withMatch: data) { _ in }
+        }
+
         if case .finished = payload.game.state.phase {
             finalizeIfNeeded(online)
+        }
+    }
+
+    /// Opens a match tapped from the home list. Reloads fresh Game Center
+    /// data first so `open` doesn't act on a stale snapshot (which would try
+    /// to re-pass a turn we no longer hold).
+    func openFromHome(_ match: GKTurnBasedMatch) async {
+        let fresh = (try? await GKTurnBasedMatch.load(withID: match.matchID)) ?? match
+        open(fresh)
+    }
+
+    /// Turn-state errors raised when we act on a match snapshot that has since
+    /// moved on. Harmless — a refresh reconciles the real state.
+    private static func isBenignTurnError(_ error: Error) -> Bool {
+        let nsError = error as NSError
+        guard nsError.domain == GKErrorDomain,
+              let code = GKError.Code(rawValue: nsError.code) else { return false }
+        switch code {
+        case .turnBasedInvalidTurn, .turnBasedInvalidState, .turnBasedInvalidParticipant:
+            return true
+        default:
+            return false
         }
     }
 
@@ -260,7 +327,7 @@ final class GameCenterManager: NSObject, ObservableObject {
 
         if case .finished(let winner) = record.state.phase {
             for (index, participant) in online.match.participants.enumerated() {
-                let side = GKTurnBasedMatch.side(forParticipantIndex: index)
+                let side = online.payload.side(forParticipantIndex: index)
                 participant.matchOutcome = side == winner ? .won : .lost
             }
             online.match.endMatchInTurn(withMatch: data) { [weak self] error in
@@ -292,6 +359,12 @@ final class GameCenterManager: NSObject, ObservableObject {
     }
 
     func resign(_ online: OnlineMatch) {
+        // Bailing before both sides finish placement isn't a real game: cancel
+        // and remove it without recording a result or touching Elo.
+        if case .placement = online.payload.game.state.phase {
+            cancelMatch(online.match)
+            return
+        }
         let data = (try? online.payload.serialized()) ?? Data()
         let isMyTurn = online.match.currentParticipant.map { GKTurnBasedMatch.isLocal($0) } ?? false
         let completion: (Error?) -> Void = { [weak self] error in
@@ -330,6 +403,11 @@ final class GameCenterManager: NSObject, ObservableObject {
                 turnTimeout: GKTurnTimeoutDefault,
                 match: match.matchData ?? Data()
             ) { _ in finish() }
+        } else if match.status != .ended {
+            // GameKit rejects `remove` for a still-active participant with no
+            // outcome, so quit out of turn first. Setting our outcome also lets
+            // `localHasLeft` hide the match even if the remove itself fails.
+            match.participantQuitOutOfTurn(with: .quit) { _ in finish() }
         } else {
             finish()
         }
@@ -340,12 +418,14 @@ final class GameCenterManager: NSObject, ObservableObject {
     /// anything else is just cancelled and removed.
     func abandon(_ match: GKTurnBasedMatch) {
         let payload = OnlineMatchPayload.decode(match.matchData)
-        let live = match.status != .ended && payload.game.winner == nil && match.hasJoinedOpponent
+        let started: Bool
+        if case .placement = payload.game.state.phase { started = false } else { started = true }
+        let live = match.status != .ended && payload.game.winner == nil && match.hasJoinedOpponent && started
         guard live else {
             cancelMatch(match)
             return
         }
-        let localSide = GKTurnBasedMatch.side(forParticipantIndex: match.localParticipantIndex ?? 0)
+        let localSide = payload.side(forParticipantIndex: match.localParticipantIndex ?? 0)
         let opponentName = match.otherParticipants.first { $0.player != nil }?.player?.displayName
         recordFinishedMatch(
             matchID: match.matchID,
@@ -360,9 +440,62 @@ final class GameCenterManager: NSObject, ObservableObject {
     func refreshOpenMatches() async {
         guard isAuthenticated else { return }
         let matches = (try? await GKTurnBasedMatch.loadMatches()) ?? []
+        // Close out matches an opponent abandoned before listing anything.
+        for match in matches where opponentQuit(in: match) {
+            finalizeOpponentQuit(match)
+        }
         openMatches = matches
             .filter { $0.status == .open || $0.status == .matching }
+            .filter { !localHasLeft($0) }
+            .filter { !opponentQuit(in: $0) }
             .sorted { ($0.creationDate) > ($1.creationDate) }
+    }
+
+    /// Whether the local player has already left a match (resigned or
+    /// finished), even if the match itself lingers as `.open`.
+    private func localHasLeft(_ match: GKTurnBasedMatch) -> Bool {
+        guard let local = match.participants.first(where: { GKTurnBasedMatch.isLocal($0) }) else {
+            return false
+        }
+        return local.matchOutcome != .none || local.status == .done
+    }
+
+    /// Whether the opponent bailed out but nothing finished the match, so it
+    /// lingers with the turn dumped on us.
+    private func opponentQuit(in match: GKTurnBasedMatch) -> Bool {
+        guard match.status != .ended else { return false }
+        let payload = OnlineMatchPayload.decode(match.matchData)
+        guard payload.game.winner == nil else { return false }
+        let localOutcome = match.participants.first { GKTurnBasedMatch.isLocal($0) }?.matchOutcome ?? .none
+        guard localOutcome == .none else { return false }
+        return match.participants.contains { participant in
+            participant.player != nil && !GKTurnBasedMatch.isLocal(participant)
+                && (participant.matchOutcome != .none || participant.status == .done)
+        }
+    }
+
+    /// Records a forfeit win for the local player and closes out a match the
+    /// opponent abandoned. Safe to call repeatedly (recording dedupes, and the
+    /// "started" gate keeps unfinished setups off the books).
+    private func finalizeOpponentQuit(_ match: GKTurnBasedMatch) {
+        let payload = OnlineMatchPayload.decode(match.matchData)
+        let localSide = payload.side(forParticipantIndex: match.localParticipantIndex ?? 0)
+        let opponentName = match.otherParticipants.first { $0.player != nil }?.player?.displayName
+        recordFinishedMatch(
+            matchID: match.matchID,
+            payload: payload,
+            localSide: localSide,
+            opponentName: opponentName,
+            localWon: true
+        )
+        // Set outcomes (the quitter's `.quit` stays) and, if we hold the turn,
+        // end the match. Failing or not holding the turn is fine — the match
+        // is excluded from the open list either way.
+        match.participants.first { GKTurnBasedMatch.isLocal($0) }?.matchOutcome = .won
+        let isMyTurn = match.currentParticipant.map { GKTurnBasedMatch.isLocal($0) } ?? false
+        if match.status != .ended, isMyTurn {
+            match.endMatchInTurn(withMatch: match.matchData ?? Data()) { _ in }
+        }
     }
 
     // MARK: - Finishing
@@ -392,6 +525,9 @@ final class GameCenterManager: NSObject, ObservableObject {
         localWon: Bool
     ) {
         guard let historyStore else { return }
+        // A game only counts once both sides have finished placement — quitting
+        // during setup leaves no history and no rating change.
+        if case .placement = payload.game.state.phase { return }
         let recordID = UUID(deterministicFrom: matchID)
         guard !historyStore.matches.contains(where: { $0.id == recordID }) else { return }
 
@@ -420,6 +556,27 @@ final class GameCenterManager: NSObject, ObservableObject {
 extension GameCenterManager: GKLocalPlayerListener {
     nonisolated func player(_ player: GKPlayer, receivedTurnEventFor match: GKTurnBasedMatch, didBecomeActive: Bool) {
         Task { @MainActor in
+            // An opponent resigning arrives as a turn event with the turn
+            // dumped on us; finalize the forfeit rather than opening a board.
+            if opponentQuit(in: match) {
+                let opponentName = match.otherParticipants.first { $0.player != nil }?.player?.displayName ?? "Your opponent"
+                let started: Bool
+                if case .placement = OnlineMatchPayload.decode(match.matchData).game.state.phase {
+                    started = false
+                } else {
+                    started = true
+                }
+                finalizeOpponentQuit(match)
+                if let active = activeMatch, active.id == match.matchID {
+                    // Nothing is recorded for an unstarted game, so don't claim a win.
+                    notice = started
+                        ? "\(opponentName) resigned — you win!"
+                        : "\(opponentName) left the match."
+                    activeMatch = nil
+                }
+                await refreshOpenMatches()
+                return
+            }
             if let active = activeMatch, active.id == match.matchID {
                 active.update(from: match)
                 let payload = OnlineMatchPayload.decode(match.matchData, ranked: active.payload.ranked)
@@ -446,6 +603,26 @@ extension GameCenterManager: GKLocalPlayerListener {
                     // Opponent quit mid-game: local player wins by forfeit.
                     recordFinishedMatch(active, localWon: true)
                 }
+            } else {
+                // A match we weren't actively viewing ended — record it too
+                // (dedupe makes double-recording safe).
+                let payload = OnlineMatchPayload.decode(match.matchData, ranked: ranked)
+                let localSide = payload.side(forParticipantIndex: match.localParticipantIndex ?? 0)
+                let opponentName = match.otherParticipants.first { $0.player != nil }?.player?.displayName
+                let localWon: Bool
+                if let winner = payload.game.winner {
+                    localWon = winner == localSide
+                } else {
+                    let outcome = match.participants.first { GKTurnBasedMatch.isLocal($0) }?.matchOutcome ?? .none
+                    localWon = outcome == .won
+                }
+                recordFinishedMatch(
+                    matchID: match.matchID,
+                    payload: payload,
+                    localSide: localSide,
+                    opponentName: opponentName,
+                    localWon: localWon
+                )
             }
             await refreshOpenMatches()
         }

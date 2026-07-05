@@ -10,6 +10,7 @@ struct HomeView: View {
     @State private var localSession: GameSession?
     @State private var showFriendMatchmaker = false
     @State private var matchPendingRemoval: GKTurnBasedMatch?
+    @Environment(\.scenePhase) private var scenePhase
 
     var body: some View {
         ZStack {
@@ -28,6 +29,9 @@ struct HomeView: View {
                         .padding(.top, 8)
                 }
                 .padding(20)
+            }
+            .refreshable {
+                await gameCenter.refreshOpenMatches()
             }
         }
         .navigationDestination(item: $localSession) { session in
@@ -72,6 +76,14 @@ struct HomeView: View {
         } message: {
             Text(gameCenter.lobbyMessage ?? "")
         }
+        .alert("Match over", isPresented: Binding(
+            get: { gameCenter.notice != nil },
+            set: { if !$0 { gameCenter.notice = nil } }
+        )) {
+            Button("OK") { gameCenter.notice = nil }
+        } message: {
+            Text(gameCenter.notice ?? "")
+        }
         .confirmationDialog(
             "Leave this match?",
             isPresented: Binding(
@@ -88,12 +100,16 @@ struct HomeView: View {
             }
             Button("Keep Match", role: .cancel) { matchPendingRemoval = nil }
         } message: {
-            Text(removalIsResignation
-                 ? "An opponent has joined, so leaving counts as a resignation."
-                 : "No one has joined this match yet. It will be removed without a result.")
+            Text(removalMessage)
         }
         .task {
             await gameCenter.refreshOpenMatches()
+        }
+        .onChange(of: scenePhase) { _, phase in
+            // Pick up invitations and opponent moves when returning to the app.
+            if phase == .active {
+                Task { await gameCenter.refreshOpenMatches() }
+            }
         }
     }
 
@@ -209,7 +225,7 @@ struct HomeView: View {
                 .kerning(1)
             ForEach(gameCenter.openMatches, id: \.matchID) { match in
                 SwipeableRow(
-                    onTap: { gameCenter.open(match) },
+                    onTap: { Task { await gameCenter.openFromHome(match) } },
                     onLeave: { matchPendingRemoval = match }
                 ) {
                     OpenMatchRow(match: match)
@@ -223,7 +239,21 @@ struct HomeView: View {
 
     private var removalIsResignation: Bool {
         guard let match = matchPendingRemoval else { return false }
-        return match.status != .ended && match.hasJoinedOpponent
+        let payload = OnlineMatchPayload.decode(match.matchData)
+        let started: Bool
+        if case .placement = payload.game.state.phase { started = false } else { started = true }
+        return match.status != .ended && match.hasJoinedOpponent && started
+    }
+
+    private var removalMessage: String {
+        guard let match = matchPendingRemoval else { return "" }
+        if removalIsResignation {
+            return "An opponent has joined, so leaving counts as a resignation."
+        }
+        if match.status != .ended && match.hasJoinedOpponent {
+            return "This match hasn't started yet, so leaving removes it without affecting your rating."
+        }
+        return "No one has joined this match yet. It will be removed without a result."
     }
 
     private var activeMatchBinding: Binding<OnlineMatch?> {
@@ -344,7 +374,8 @@ private struct OpenMatchRow: View {
     }
 
     private var isMyTurn: Bool {
-        match.currentParticipant?.player?.gamePlayerID == GKLocalPlayer.local.gamePlayerID
+        guard let current = match.currentParticipant else { return false }
+        return GKTurnBasedMatch.isLocal(current)
     }
 
     private var opponentName: String {
