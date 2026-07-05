@@ -1,18 +1,23 @@
 import SwiftUI
 import GameKit
 
-/// A shareable party invite: a code and the deep link that carries it.
+/// A shareable party invite, identified by its code.
 private struct PartyInvite: Identifiable {
     let code: String
-    let url: URL
     var id: String { code }
+
+    /// Plain-text Messages blurb; the friend types the code under
+    /// "Have a code?".
+    var shareText: String {
+        "Play me in Overboard! Open Play a Friend → \"Have a code?\" and enter \(code)"
+    }
 }
 
 /// In-app, theme-matched picker: lists the local player's Game Center friends
-/// and recent opponents (one-tap invite each), plus a "share a link in
-/// Messages" party-code flow and a "join by code" field. Invites flow through
-/// `GameCenterManager.open`, so a created match reaches the same lobby/board
-/// logic as everything else.
+/// and recent opponents (one-tap invite each), plus a party-code flow (share
+/// the code in Messages, the friend types it under "Have a code?"). Invites
+/// flow through `GameCenterManager.open`, so a created match reaches the same
+/// lobby/board logic as everything else.
 struct FriendPickerView: View {
     @EnvironmentObject private var gameCenter: GameCenterManager
     @Environment(\.dismiss) private var dismiss
@@ -249,10 +254,7 @@ struct FriendPickerView: View {
                 .font(.system(size: 42, weight: .black, design: .rounded))
                 .foregroundStyle(.white)
                 .kerning(4)
-            ShareLink(
-                item: invite.url,
-                message: Text("Play me in Overboard! Tap to join:")
-            ) {
+            ShareLink(item: invite.shareText) {
                 Label("Send in Messages", systemImage: "message.fill")
                     .font(.headline)
                     .foregroundStyle(.white)
@@ -263,7 +265,7 @@ struct FriendPickerView: View {
                             .fill(Theme.accent)
                     )
             }
-            Text("The game starts as soon as your friend taps your link.")
+            Text("The game starts as soon as your friend enters this code under \"Have a code?\".")
                 .font(.footnote)
                 .foregroundStyle(.white.opacity(0.6))
                 .multilineTextAlignment(.center)
@@ -336,11 +338,11 @@ struct FriendPickerView: View {
         guard !isBusy else { return }
         isCreatingInvite = true
         Task {
-            let created = await gameCenter.createPartyInvite()
+            let code = await gameCenter.createPartyInvite()
             isCreatingInvite = false
-            if let created {
+            if let code {
                 withAnimation(.easeInOut(duration: 0.25)) {
-                    partyInvite = PartyInvite(code: created.code, url: created.url)
+                    partyInvite = PartyInvite(code: code)
                 }
             }
         }

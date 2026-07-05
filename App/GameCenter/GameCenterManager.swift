@@ -232,22 +232,21 @@ final class GameCenterManager: NSObject, ObservableObject {
 
     // MARK: - Party-code invites
 
-    /// The base GitHub Pages URL that deep-links a party code into the app.
-    static let partyJoinBaseURL = "https://skamath99.github.io/Overboard/join.html"
     /// Unambiguous code alphabet (no O/0, I/1, L, etc.).
     private static let partyCodeAlphabet = Array("ABCDEFGHJKMNPQRSTUVWXYZ23456789")
 
     /// Deterministic `playerGroup` for a party code, agreed across devices and
     /// processes (Swift's `Hasher` is per-process seeded, so never use it).
-    /// SHA256 the uppercased code, read the first 8 bytes big-endian, clear the
-    /// sign bit, and map 0 → 1 so we never collide with the global pool (0).
+    /// SHA256 the uppercased code, folded to 31 bits (values beyond 32 bits
+    /// are unproven against the matchmaking service), mapping 0 → 1 so we
+    /// never collide with the global pool (0).
     static func partyGroup(for code: String) -> Int {
         let digest = SHA256.hash(data: Data(code.uppercased().utf8))
         var value: UInt64 = 0
         for byte in digest.prefix(8) {
             value = (value << 8) | UInt64(byte)
         }
-        value &= 0x7fff_ffff_ffff_ffff
+        value &= 0x7fff_ffff
         return Int(value == 0 ? 1 : value)
     }
 
@@ -256,9 +255,9 @@ final class GameCenterManager: NSObject, ObservableObject {
     }
 
     /// Creates a private waiting match keyed to a fresh party code and returns
-    /// the code plus a shareable join link. The friend enters the same private
-    /// pool via the link, and Game Center pairs them.
-    func createPartyInvite() async -> (code: String, url: URL)? {
+    /// the code. The friend enters the same private pool by typing the code,
+    /// and Game Center pairs them.
+    func createPartyInvite() async -> String? {
         guard isAuthenticated else { return nil }
         let code = Self.makePartyCode()
         let request = GKMatchRequest()
@@ -270,8 +269,7 @@ final class GameCenterManager: NSObject, ObservableObject {
             // No lobby banner: the share step communicates the waiting state, and
             // setting lobbyMessage here would race the picker's own presentation.
             open(match, lobbyNotice: .none)
-            guard let url = URL(string: "\(Self.partyJoinBaseURL)?code=\(code)") else { return nil }
-            return (code, url)
+            return code
         } catch {
             lastError = error.localizedDescription
             return nil
@@ -362,10 +360,13 @@ final class GameCenterManager: NSObject, ObservableObject {
 
         // If we hold the Game Center turn but the engine's next action
         // belongs to the other seat, pass the turn along instead of showing
-        // a board with nothing to do. For a brand-new match this is the
-        // creator handing the setup turn to the joiner.
+        // a board with nothing to do. A brand-new match ALWAYS hands the empty
+        // first turn away — that is what enters it into the matchmaking pool
+        // (or sends the invite) — even when the creator drew the side that
+        // places first: the joiner's client bounces the turn straight back
+        // through this same branch, and only then does the creator set up.
         let actingSide = payload.game.state.placingPlayer ?? payload.game.state.currentPlayer
-        if payload.game.winner == nil, actingSide != localSide, holdsTurn(in: match, actionsEmpty: payload.game.actions.isEmpty) {
+        if payload.game.winner == nil, actingSide != localSide || isFreshMatch, holdsTurn(in: match, actionsEmpty: payload.game.actions.isEmpty) {
             let data = (try? payload.serialized()) ?? Data()
             match.endTurn(
                 withNextParticipants: match.otherParticipants,
@@ -383,9 +384,15 @@ final class GameCenterManager: NSObject, ObservableObject {
             }
             switch lobbyNotice {
             case .standard:
-                lobbyMessage = match.hasJoinedOpponent
-                    ? "Invite sent! Your friend sets up their side first — you'll be notified when it's your move."
-                    : "You're in the matchmaking pool. You'll be notified when an opponent joins and sets up their side."
+                // Seat 0 is the creator; anyone else is a joiner bouncing the
+                // setup turn back to a creator who places first.
+                if (match.localParticipantIndex ?? 0) != 0 {
+                    lobbyMessage = "You're in! Your opponent sets up first — you'll be notified when it's your move."
+                } else if match.hasJoinedOpponent {
+                    lobbyMessage = "Invite sent! You'll be notified when it's your turn."
+                } else {
+                    lobbyMessage = "You're in the matchmaking pool. You'll be notified when an opponent joins."
+                }
             case .custom(let text):
                 lobbyMessage = text
             case .none:
@@ -401,15 +408,6 @@ final class GameCenterManager: NSObject, ObservableObject {
             self.commit(record, turnEnded: turnEnded, in: online)
         }
         activeMatch = online
-
-        // Persist a fresh match's payload right away so the randomized
-        // `seatZeroSide` is committed before the creator's first move. Without
-        // this, a friend accepting in that window would decode empty data and
-        // fall back to `.two`, diverging from the creator. Only for empty
-        // match data, so we never clobber an existing game.
-        if isFreshMatch, let data = try? payload.serialized() {
-            match.saveCurrentTurn(withMatch: data) { _ in }
-        }
 
         if case .finished = payload.game.state.phase {
             finalizeIfNeeded(online)
