@@ -138,6 +138,9 @@ final class GameCenterManager: NSObject, ObservableObject {
 
     private weak var eloStore: EloStore?
     private weak var historyStore: HistoryStore?
+    /// A party code from a deep link that arrived before authentication; joined
+    /// as soon as sign-in completes.
+    private var pendingJoinCode: String?
 
     func configure(eloStore: EloStore, historyStore: HistoryStore) {
         self.eloStore = eloStore
@@ -159,6 +162,11 @@ final class GameCenterManager: NSObject, ObservableObject {
                     self.authStatus = "Signed in as \(GKLocalPlayer.local.displayName)"
                     GKLocalPlayer.local.register(self)
                     await self.refreshOpenMatches()
+                    // Honor a deep link that arrived before we were signed in.
+                    if let code = self.pendingJoinCode {
+                        self.pendingJoinCode = nil
+                        await self.joinParty(code: code)
+                    }
                 } else {
                     self.isAuthenticated = false
                     self.authStatus = error.map { "Game Center unavailable: \($0.localizedDescription)" }
@@ -176,15 +184,18 @@ final class GameCenterManager: NSObject, ObservableObject {
 
     // MARK: - Starting matches
 
-    /// Ranked lobby: auto-match against a stranger in the same Elo band.
+    /// Ranked lobby: auto-match against a stranger from the global queue.
     func findRankedMatch() async {
-        guard isAuthenticated, let eloStore else { return }
+        guard isAuthenticated else { return }
         isFindingRankedMatch = true
         defer { isFindingRankedMatch = false }
         let request = GKMatchRequest()
         request.minPlayers = 2
         request.maxPlayers = 2
-        request.playerGroup = eloStore.matchmakingGroup
+        // Ranked uses a single global pool: Game Center only pairs equal
+        // `playerGroup` values, so rating bands would strand a small player
+        // base in separate buckets. Add banding back once the population
+        // justifies it.
         do {
             let match = try await GKTurnBasedMatch.find(for: request)
             open(match, rankedIfNew: true)
@@ -193,7 +204,7 @@ final class GameCenterManager: NSObject, ObservableObject {
         }
     }
 
-    /// Friend match: present Game Center's invite UI.
+    /// Base request for a direct friend/recent-player invite.
     var friendMatchRequest: GKMatchRequest {
         let request = GKMatchRequest()
         request.minPlayers = 2
@@ -202,11 +213,129 @@ final class GameCenterManager: NSObject, ObservableObject {
         return request
     }
 
+    /// Creates a turn-based match inviting a specific friend, then opens it
+    /// through the usual lobby/board flow. Returns whether the match was
+    /// created (so callers can keep their UI up on failure).
+    @discardableResult
+    func invite(_ player: GKPlayer) async -> Bool {
+        let request = friendMatchRequest
+        request.recipients = [player]
+        do {
+            let match = try await GKTurnBasedMatch.find(for: request)
+            open(match)
+            return true
+        } catch {
+            lastError = error.localizedDescription
+            return false
+        }
+    }
+
+    // MARK: - Party-code invites
+
+    /// The base GitHub Pages URL that deep-links a party code into the app.
+    static let partyJoinBaseURL = "https://skamath99.github.io/Overboard/join.html"
+    /// Unambiguous code alphabet (no O/0, I/1, L, etc.).
+    private static let partyCodeAlphabet = Array("ABCDEFGHJKMNPQRSTUVWXYZ23456789")
+
+    /// Deterministic `playerGroup` for a party code, agreed across devices and
+    /// processes (Swift's `Hasher` is per-process seeded, so never use it).
+    /// SHA256 the uppercased code, read the first 8 bytes big-endian, clear the
+    /// sign bit, and map 0 → 1 so we never collide with the global pool (0).
+    static func partyGroup(for code: String) -> Int {
+        let digest = SHA256.hash(data: Data(code.uppercased().utf8))
+        var value: UInt64 = 0
+        for byte in digest.prefix(8) {
+            value = (value << 8) | UInt64(byte)
+        }
+        value &= 0x7fff_ffff_ffff_ffff
+        return Int(value == 0 ? 1 : value)
+    }
+
+    private static func makePartyCode() -> String {
+        String((0..<6).map { _ in partyCodeAlphabet.randomElement()! })
+    }
+
+    /// Creates a private waiting match keyed to a fresh party code and returns
+    /// the code plus a shareable join link. The friend enters the same private
+    /// pool via the link, and Game Center pairs them.
+    func createPartyInvite() async -> (code: String, url: URL)? {
+        guard isAuthenticated else { return nil }
+        let code = Self.makePartyCode()
+        let request = GKMatchRequest()
+        request.minPlayers = 2
+        request.maxPlayers = 2
+        request.playerGroup = Self.partyGroup(for: code)
+        do {
+            let match = try await GKTurnBasedMatch.find(for: request)
+            // No lobby banner: the share step communicates the waiting state, and
+            // setting lobbyMessage here would race the picker's own presentation.
+            open(match, lobbyNotice: .none)
+            guard let url = URL(string: "\(Self.partyJoinBaseURL)?code=\(code)") else { return nil }
+            return (code, url)
+        } catch {
+            lastError = error.localizedDescription
+            return nil
+        }
+    }
+
+    /// Joins the private pool for a party code; Game Center pairs the joiner
+    /// with the inviter's waiting match since the `playerGroup`s are equal.
+    func joinParty(code: String) async {
+        guard isAuthenticated else { return }
+        let normalized = code.trimmingCharacters(in: .whitespacesAndNewlines).uppercased()
+        guard !normalized.isEmpty else { return }
+        let request = GKMatchRequest()
+        request.minPlayers = 2
+        request.maxPlayers = 2
+        request.playerGroup = Self.partyGroup(for: normalized)
+        do {
+            let match = try await GKTurnBasedMatch.find(for: request)
+            open(match)
+        } catch {
+            lastError = error.localizedDescription
+        }
+    }
+
+    /// Handles an incoming deep link, accepting both `overboard://join/<CODE>`
+    /// (and `overboard://join?code=`) and the https share link with `?code=`.
+    func handleIncomingURL(_ url: URL) {
+        guard let code = Self.partyCode(from: url) else { return }
+        if isAuthenticated {
+            Task { await joinParty(code: code) }
+        } else {
+            pendingJoinCode = code
+        }
+    }
+
+    private static func partyCode(from url: URL) -> String? {
+        let components = URLComponents(url: url, resolvingAgainstBaseURL: false)
+        if let query = components?.queryItems?.first(where: { $0.name == "code" })?.value,
+           !query.isEmpty {
+            return query
+        }
+        // `overboard://join/<CODE>`: host is "join", code is the path segment.
+        let segments = url.pathComponents.filter { $0 != "/" }
+        if url.host == "join", let last = segments.last, !last.isEmpty {
+            return last
+        }
+        return nil
+    }
+
     /// Opens a match. Creators of fresh matches don't get a board: the empty
     /// first turn is handed straight to the opponent's seat, which is what
     /// enters the match into Game Center's matchmaking pool. The board only
     /// appears once it's genuinely this player's turn to act.
-    func open(_ match: GKTurnBasedMatch, rankedIfNew: Bool = false) {
+    /// Controls the lobby banner shown when a fresh match hands its turn away.
+    enum LobbyNotice {
+        /// The default automatch/invite-pending texts.
+        case standard
+        /// A caller-supplied message.
+        case custom(String)
+        /// No banner (e.g. party invites, whose share UI already explains).
+        case none
+    }
+
+    func open(_ match: GKTurnBasedMatch, rankedIfNew: Bool = false, lobbyNotice: LobbyNotice = .standard) {
         var payload = OnlineMatchPayload.decode(match.matchData, ranked: rankedIfNew)
 
         // Brand-new match (no data written yet): pick which side the creator
@@ -252,9 +381,16 @@ final class GameCenterManager: NSObject, ObservableObject {
                     await self?.refreshOpenMatches()
                 }
             }
-            lobbyMessage = match.hasJoinedOpponent
-                ? "Invite sent! Your friend sets up their side first — you'll be notified when it's your move."
-                : "You're in the matchmaking pool. You'll be notified when an opponent joins and sets up their side."
+            switch lobbyNotice {
+            case .standard:
+                lobbyMessage = match.hasJoinedOpponent
+                    ? "Invite sent! Your friend sets up their side first — you'll be notified when it's your move."
+                    : "You're in the matchmaking pool. You'll be notified when an opponent joins and sets up their side."
+            case .custom(let text):
+                lobbyMessage = text
+            case .none:
+                break
+            }
             return
         }
 

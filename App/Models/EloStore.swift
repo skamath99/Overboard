@@ -20,10 +20,6 @@ final class EloStore: ObservableObject {
         rankedGamesPlayed = UserDefaults.standard.integer(forKey: Self.gamesKey)
     }
 
-    var matchmakingGroup: Int {
-        Elo.matchmakingGroup(for: rating)
-    }
-
     /// Applies a ranked result and returns the local player's rating delta.
     @discardableResult
     func recordRankedGame(won: Bool, opponentRating: Int) -> Int {

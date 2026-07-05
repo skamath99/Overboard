@@ -20,14 +20,4 @@ public enum Elo {
         let delta = Int((k * (1.0 - expectedWin)).rounded())
         return (winner + delta, loser - delta)
     }
-
-    /// Matchmaking bucket for lobby matching. Game Center only pairs players
-    /// whose `GKMatchRequest.playerGroup` values are equal, so ratings are
-    /// bucketed into 300-point bands (clamped so extreme ratings still match
-    /// the nearest band's population).
-    public static func matchmakingGroup(for rating: Int) -> Int {
-        let band = 300
-        let clamped = min(max(rating, 600), 2400)
-        return clamped / band
-    }
 }

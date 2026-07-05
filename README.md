@@ -6,7 +6,7 @@
 
 - **Pass & Play** — full local game on one device, with placement, move/push highlighting, undo, and animated pieces.
 - **Play a Friend** — Game Center turn-based match via the system invite UI.
-- **Ranked Lobby** — auto-match against strangers; players are paired within Elo bands (`GKMatchRequest.playerGroup`), and ratings update after each ranked game.
+- **Ranked Lobby** — auto-match against strangers from a single global queue, and ratings update after each ranked game.
 - **Match History** — every finished game is stored locally and can be replayed move by move (scrubber + autoplay).
 - **Elo** — standard Elo (K=32), starting at 1200, persisted locally and mirrored to a Game Center leaderboard (`pushfight.elo`).
 
@@ -17,7 +17,7 @@ PushFightiOS/
 ├── PushFightCore/          Pure Swift rules engine (SPM package, no dependencies)
 │   ├── GameState           Board, placement, BFS moves, pushes, rails, anchor, win detection
 │   ├── GameRecord          Action log; replay/undo/scrub derive any state
-│   └── Elo                 Rating math + matchmaking bands
+│   └── Elo                 Rating math
 ├── App/
 │   ├── Models/             GameSession (interaction/selection), stores (history, Elo)
 │   ├── GameCenter/         GameCenterManager (auth, matchmaking, turn sync), matchmaker UI

@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Join a game · Overboard!</title>
+    <style>
+        :root {
+            --accent: #4CA3FF;
+            --ivory: #FDFBF4;
+            --walnut: #6B4A33;
+        }
+        * { box-sizing: border-box; }
+        html, body { margin: 0; padding: 0; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+            min-height: 100vh;
+            background: linear-gradient(180deg, #1B2233 0%, #10141F 100%);
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+            -webkit-font-smoothing: antialiased;
+        }
+        .card {
+            width: 100%;
+            max-width: 380px;
+            text-align: center;
+        }
+        .dots {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-bottom: 22px;
+        }
+        .dot {
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+        }
+        .dot.ivory  { background: var(--ivory); border: 1px solid #B8AF99; }
+        .dot.walnut { background: var(--walnut); border: 1px solid #2A1B10; }
+        h1 {
+            font-size: 34px;
+            font-weight: 800;
+            letter-spacing: 1px;
+            margin: 0 0 6px;
+        }
+        .tagline {
+            color: rgba(255,255,255,0.55);
+            font-size: 15px;
+            margin: 0 0 30px;
+        }
+        .label {
+            font-size: 12px;
+            font-weight: 700;
+            letter-spacing: 1.5px;
+            color: rgba(255,255,255,0.5);
+            margin-bottom: 8px;
+        }
+        .code {
+            font-size: 44px;
+            font-weight: 800;
+            letter-spacing: 8px;
+            font-variant-numeric: tabular-nums;
+            margin-bottom: 30px;
+            padding-left: 8px;
+        }
+        .btn {
+            display: block;
+            width: 100%;
+            padding: 17px;
+            border-radius: 16px;
+            background: var(--accent);
+            color: #0D1420;
+            font-size: 17px;
+            font-weight: 700;
+            text-decoration: none;
+            border: none;
+            cursor: pointer;
+        }
+        .btn:active { opacity: 0.8; }
+        .fallback {
+            margin-top: 26px;
+            font-size: 14px;
+            line-height: 1.6;
+            color: rgba(255,255,255,0.6);
+        }
+        .fallback a { color: var(--accent); text-decoration: none; }
+        .fallback code {
+            color: #fff;
+            font-weight: 700;
+            letter-spacing: 1px;
+        }
+        .error {
+            font-size: 16px;
+            line-height: 1.6;
+            color: rgba(255,255,255,0.75);
+        }
+        .hidden { display: none; }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <div class="dots">
+            <span class="dot ivory"></span>
+            <span class="dot walnut"></span>
+        </div>
+        <h1>OVERBOARD!</h1>
+
+        <div id="valid" class="hidden">
+            <p class="tagline">A friend invited you to a match.</p>
+            <div class="label">INVITE CODE</div>
+            <div class="code" id="code"></div>
+            <a class="btn" id="openBtn" href="#">Open in Overboard!</a>
+            <p class="fallback">
+                Don't have the app? <a href="https://apps.apple.com/app/id6787431568">Get Overboard! on the App Store</a>,
+                then open <strong>Play a Friend → Have a code?</strong> and enter <code id="codeEcho"></code>.
+            </p>
+        </div>
+
+        <div id="invalid" class="hidden">
+            <p class="tagline">Join a game</p>
+            <p class="error">
+                This invite link is missing a valid code. Ask your friend to send you a fresh link
+                from <strong>Play a Friend → Invite via Messages</strong> in Overboard!.
+            </p>
+        </div>
+    </div>
+
+    <script>
+        (function () {
+            var params = new URLSearchParams(window.location.search);
+            var raw = (params.get('code') || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
+            var valid = raw.length >= 4 && raw.length <= 8;
+
+            if (valid) {
+                var deepLink = 'overboard://join/' + raw;
+                document.getElementById('code').textContent = raw;
+                document.getElementById('codeEcho').textContent = raw;
+                document.getElementById('openBtn').setAttribute('href', deepLink);
+                document.getElementById('valid').classList.remove('hidden');
+                // Best-effort auto-open for people who already have the app.
+                setTimeout(function () { window.location.href = deepLink; }, 400);
+            } else {
+                document.getElementById('invalid').classList.remove('hidden');
+            }
+        })();
+    </script>
+</body>
+</html>

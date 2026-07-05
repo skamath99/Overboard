@@ -8,7 +8,7 @@ struct HomeView: View {
     @EnvironmentObject private var history: HistoryStore
 
     @State private var localSession: GameSession?
-    @State private var showFriendMatchmaker = false
+    @State private var showFriendPicker = false
     @State private var matchPendingRemoval: GKTurnBasedMatch?
     @Environment(\.scenePhase) private var scenePhase
 
@@ -57,11 +57,8 @@ struct HomeView: View {
                 onExit: { gameCenter.activeMatch = nil }
             )
         }
-        .sheet(isPresented: $showFriendMatchmaker) {
-            MatchmakerView(request: gameCenter.friendMatchRequest) {
-                showFriendMatchmaker = false
-            }
-            .ignoresSafeArea()
+        .sheet(isPresented: $showFriendPicker) {
+            FriendPickerView()
         }
         .alert("Something went wrong", isPresented: errorBinding) {
             Button("OK") { gameCenter.lastError = nil }
@@ -179,7 +176,7 @@ struct HomeView: View {
             .buttonStyle(MenuButtonStyle(prominent: true))
 
             Button {
-                showFriendMatchmaker = true
+                showFriendPicker = true
             } label: {
                 Label("Play a Friend", systemImage: "envelope.fill")
             }

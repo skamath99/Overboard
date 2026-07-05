@@ -29,6 +29,7 @@ struct PushFightApp: App {
             .onAppear {
                 gameCenter.authenticate()
             }
+            .onOpenURL { gameCenter.handleIncomingURL($0) }
         }
     }
 }

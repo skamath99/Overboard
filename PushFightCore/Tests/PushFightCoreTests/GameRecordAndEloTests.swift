@@ -90,12 +90,4 @@ final class EloTests: XCTestCase {
         // Rating is conserved.
         XCTAssertEqual(upset.winner + upset.loser, 2800)
     }
-
-    func testMatchmakingGroupsBandAndClamp() {
-        XCTAssertEqual(Elo.matchmakingGroup(for: 1200), Elo.matchmakingGroup(for: 1400))
-        XCTAssertNotEqual(Elo.matchmakingGroup(for: 1200), Elo.matchmakingGroup(for: 1600))
-        // Extremes clamp into the outermost bands.
-        XCTAssertEqual(Elo.matchmakingGroup(for: 0), Elo.matchmakingGroup(for: 600))
-        XCTAssertEqual(Elo.matchmakingGroup(for: 4000), Elo.matchmakingGroup(for: 2400))
-    }
 }

@@ -15,6 +15,13 @@ targets:
       - App
     dependencies:
       - package: PushFightCore
+    info:
+      path: App/Info.plist
+      properties:
+        CFBundleURLTypes:
+          - CFBundleURLName: com.sank.pushfight
+            CFBundleURLSchemes:
+              - overboard
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.sank.pushfight
@@ -23,13 +30,14 @@ targets:
         TARGETED_DEVICE_FAMILY: "1"
         INFOPLIST_KEY_UILaunchScreen_Generation: YES
         SWIFT_VERSION: "5.10"
-        CURRENT_PROJECT_VERSION: 4
+        CURRENT_PROJECT_VERSION: 5
         MARKETING_VERSION: "1.0"
         GENERATE_INFOPLIST_FILE: YES
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
         INFOPLIST_KEY_ITSAppUsesNonExemptEncryption: NO
         INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone: UIInterfaceOrientationPortrait
         INFOPLIST_KEY_CFBundleDisplayName: Overboard!
+        INFOPLIST_KEY_NSGKFriendListUsageDescription: "Your Game Center friends are shown so you can invite them to a match."
     scheme:
       testTargets:
         - PushFightUITests

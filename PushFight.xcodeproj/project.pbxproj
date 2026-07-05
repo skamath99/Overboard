@@ -10,9 +10,9 @@
 		1713B70DA43A1A6EEA5E1AFC /* GameCenterManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1D41083F0E5F6C299A030B1C /* GameCenterManager.swift */; };
 		31BB9D4841AB5ED7DBD18209 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 82DB3A2BC9273F212724163C /* Assets.xcassets */; };
 		40B7A06658E457C1F660DA8F /* GameView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C84FB05956288859DC6A7E34 /* GameView.swift */; };
+		4BFAE473CEA922E22A5080B2 /* FriendPickerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF7156202C30426686A3CCF5 /* FriendPickerView.swift */; };
 		61E5B527E5E15B23A5495615 /* HomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 540E55DBF8B4F2DDF1A4ADF2 /* HomeView.swift */; };
 		64ACBF1C34E66EB251CBBEA1 /* PushFightApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 26815918801936FCD54F2FB8 /* PushFightApp.swift */; };
-		732BEAAA6998DECC82C0B07C /* MatchmakerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 166609C762E10BDE279C112A /* MatchmakerView.swift */; };
 		77D6E60F9CEC4487F253B38C /* ReplayView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1ED85B2658FA46395C6F8255 /* ReplayView.swift */; };
 		7D710F36030847C1314EE916 /* PushFightUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CDFFB0CE27040C7F714C5089 /* PushFightUITests.swift */; };
 		9168F0A1618D03791EBE5F5F /* HowToPlayView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DDECE4760A1A98E6CDDCD044 /* HowToPlayView.swift */; };
@@ -37,7 +37,6 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
-		166609C762E10BDE279C112A /* MatchmakerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MatchmakerView.swift; sourceTree = "<group>"; };
 		1D41083F0E5F6C299A030B1C /* GameCenterManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameCenterManager.swift; sourceTree = "<group>"; };
 		1D44DC4B2CFFDD4F8AC1C4E7 /* BoardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BoardView.swift; sourceTree = "<group>"; };
 		1ED85B2658FA46395C6F8255 /* ReplayView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReplayView.swift; sourceTree = "<group>"; };
@@ -57,6 +56,8 @@
 		D3DC55271A1DE17384182945 /* GameSession.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameSession.swift; sourceTree = "<group>"; };
 		DDECE4760A1A98E6CDDCD044 /* HowToPlayView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HowToPlayView.swift; sourceTree = "<group>"; };
 		EA5F9C26685C0C77D71511F9 /* EloStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EloStore.swift; sourceTree = "<group>"; };
+		FAC20ECD45E44C5214C84463 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		FF7156202C30426686A3CCF5 /* FriendPickerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FriendPickerView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -133,8 +134,8 @@
 		C2794D2AF47938E1D206D7F9 /* GameCenter */ = {
 			isa = PBXGroup;
 			children = (
+				FF7156202C30426686A3CCF5 /* FriendPickerView.swift */,
 				1D41083F0E5F6C299A030B1C /* GameCenterManager.swift */,
-				166609C762E10BDE279C112A /* MatchmakerView.swift */,
 			);
 			path = GameCenter;
 			sourceTree = "<group>";
@@ -143,6 +144,7 @@
 			isa = PBXGroup;
 			children = (
 				82DB3A2BC9273F212724163C /* Assets.xcassets */,
+				FAC20ECD45E44C5214C84463 /* Info.plist */,
 				2F9C27948B80BA1D38A31EA4 /* PushFight.entitlements */,
 				26815918801936FCD54F2FB8 /* PushFightApp.swift */,
 				745CF9BF8BBE5AAF544EBF23 /* Theme.swift */,
@@ -252,6 +254,7 @@
 			files = (
 				9B45ED438AB724EBDC82D055 /* BoardView.swift in Sources */,
 				A9AAB7831DB5FB61A199244E /* EloStore.swift in Sources */,
+				4BFAE473CEA922E22A5080B2 /* FriendPickerView.swift in Sources */,
 				1713B70DA43A1A6EEA5E1AFC /* GameCenterManager.swift in Sources */,
 				F74A52E18F12DAC085BEFD3D /* GameSession.swift in Sources */,
 				40B7A06658E457C1F660DA8F /* GameView.swift in Sources */,
@@ -260,7 +263,6 @@
 				61E5B527E5E15B23A5495615 /* HomeView.swift in Sources */,
 				9168F0A1618D03791EBE5F5F /* HowToPlayView.swift in Sources */,
 				9D0BF0F45939E272D26C83FA /* MatchRecord.swift in Sources */,
-				732BEAAA6998DECC82C0B07C /* MatchmakerView.swift in Sources */,
 				64ACBF1C34E66EB251CBBEA1 /* PushFightApp.swift in Sources */,
 				77D6E60F9CEC4487F253B38C /* ReplayView.swift in Sources */,
 				AE9B9188D06FD0D01F4A2F65 /* Theme.swift in Sources */,
@@ -429,11 +431,13 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = App/PushFight.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
-				CURRENT_PROJECT_VERSION = 4;
+				CURRENT_PROJECT_VERSION = 5;
 				DEVELOPMENT_TEAM = 547M5QUW76;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = App/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = "Overboard!";
 				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
+				INFOPLIST_KEY_NSGKFriendListUsageDescription = "Your Game Center friends are shown so you can invite them to a match.";
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = UIInterfaceOrientationPortrait;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -454,11 +458,13 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = App/PushFight.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
-				CURRENT_PROJECT_VERSION = 4;
+				CURRENT_PROJECT_VERSION = 5;
 				DEVELOPMENT_TEAM = 547M5QUW76;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = App/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = "Overboard!";
 				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
+				INFOPLIST_KEY_NSGKFriendListUsageDescription = "Your Game Center friends are shown so you can invite them to a match.";
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = UIInterfaceOrientationPortrait;
 				LD_RUNPATH_SEARCH_PATHS = (
