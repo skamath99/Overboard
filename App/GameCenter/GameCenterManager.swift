@@ -13,16 +13,20 @@ struct OnlineMatchPayload: Codable {
     /// both clients agree; defaults to `.two` for matches created before this
     /// field existed.
     var seatZeroSide: Player
+    /// The invite code for party matches, so the creator can re-read it while
+    /// the match waits for the friend.
+    var partyCode: String?
 
-    init(game: GameRecord, ranked: Bool, ratings: [String: Int], seatZeroSide: Player = .two) {
+    init(game: GameRecord, ranked: Bool, ratings: [String: Int], seatZeroSide: Player = .two, partyCode: String? = nil) {
         self.game = game
         self.ranked = ranked
         self.ratings = ratings
         self.seatZeroSide = seatZeroSide
+        self.partyCode = partyCode
     }
 
     private enum CodingKeys: String, CodingKey {
-        case game, ranked, ratings, seatZeroSide
+        case game, ranked, ratings, seatZeroSide, partyCode
     }
 
     init(from decoder: Decoder) throws {
@@ -31,6 +35,7 @@ struct OnlineMatchPayload: Codable {
         ranked = try container.decode(Bool.self, forKey: .ranked)
         ratings = try container.decode([String: Int].self, forKey: .ratings)
         seatZeroSide = try container.decodeIfPresent(Player.self, forKey: .seatZeroSide) ?? .two
+        partyCode = try container.decodeIfPresent(String.self, forKey: .partyCode)
     }
 
     func serialized() throws -> Data {
@@ -268,7 +273,7 @@ final class GameCenterManager: NSObject, ObservableObject {
             let match = try await GKTurnBasedMatch.find(for: request)
             // No lobby banner: the share step communicates the waiting state, and
             // setting lobbyMessage here would race the picker's own presentation.
-            open(match, lobbyNotice: .none)
+            open(match, lobbyNotice: .none, partyCode: code)
             return code
         } catch {
             lastError = error.localizedDescription
@@ -333,7 +338,7 @@ final class GameCenterManager: NSObject, ObservableObject {
         case none
     }
 
-    func open(_ match: GKTurnBasedMatch, rankedIfNew: Bool = false, lobbyNotice: LobbyNotice = .standard) {
+    func open(_ match: GKTurnBasedMatch, rankedIfNew: Bool = false, lobbyNotice: LobbyNotice = .standard, partyCode: String? = nil) {
         var payload = OnlineMatchPayload.decode(match.matchData, ranked: rankedIfNew)
 
         // Brand-new match (no data written yet): pick which side the creator
@@ -341,6 +346,7 @@ final class GameCenterManager: NSObject, ObservableObject {
         let isFreshMatch = match.matchData?.isEmpty ?? true
         if isFreshMatch {
             payload.seatZeroSide = Bool.random() ? .one : .two
+            payload.partyCode = partyCode
         }
 
         // Register our rating the first time we touch a ranked match.

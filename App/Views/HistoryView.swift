@@ -47,6 +47,11 @@ private struct HistoryRow: View {
                     .font(.subheadline.weight(.semibold))
                     .foregroundStyle(.white)
                 HStack(spacing: 6) {
+                    if match.mode == .ranked {
+                        Image(systemName: "trophy.fill")
+                            .font(.caption2)
+                            .foregroundStyle(Theme.lastMove)
+                    }
                     Text(match.mode.label)
                     Text("·")
                     Text(match.date, style: .date)

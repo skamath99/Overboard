@@ -347,14 +347,22 @@ private struct OpenMatchRow: View {
     let match: GKTurnBasedMatch
 
     var body: some View {
+        let payload = OnlineMatchPayload.decode(match.matchData)
         HStack(spacing: 12) {
             Image(systemName: isMyTurn ? "exclamationmark.circle.fill" : "hourglass")
                 .foregroundStyle(isMyTurn ? Theme.lastMove : .white.opacity(0.5))
             VStack(alignment: .leading, spacing: 2) {
-                Text(opponentName)
-                    .font(.subheadline.weight(.semibold))
-                    .foregroundStyle(.white)
-                Text(isMyTurn ? "Your turn" : (match.status == .matching ? "Waiting for an opponent…" : "Their turn"))
+                HStack(spacing: 6) {
+                    Text(opponentName)
+                        .font(.subheadline.weight(.semibold))
+                        .foregroundStyle(.white)
+                    if payload.ranked {
+                        Image(systemName: "trophy.fill")
+                            .font(.caption2)
+                            .foregroundStyle(Theme.lastMove)
+                    }
+                }
+                Text(subtitle(payload: payload))
                     .font(.caption)
                     .foregroundStyle(.white.opacity(0.55))
             }
@@ -368,6 +376,15 @@ private struct OpenMatchRow: View {
             RoundedRectangle(cornerRadius: 14, style: .continuous)
                 .fill(.white.opacity(0.06))
         )
+    }
+
+    /// While a party match waits for the friend, resurface its invite code.
+    private func subtitle(payload: OnlineMatchPayload) -> String {
+        if !match.hasJoinedOpponent, let code = payload.partyCode {
+            return "Code \(code) — waiting for a friend…"
+        }
+        if isMyTurn { return "Your turn" }
+        return match.status == .matching ? "Waiting for an opponent…" : "Their turn"
     }
 
     private var isMyTurn: Bool {
