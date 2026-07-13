@@ -19,6 +19,26 @@ final class ComputerPlayerTests: XCTestCase {
         }
     }
 
+    /// Regression: setup A once placed a square on c4/f1, where the opponent
+    /// pushes it off through the missing-corner gap on their very first turn.
+    /// No fixed setup may use a tile with an open edge, for either player.
+    func testOpeningSetupsAvoidOpenEdgeTiles() {
+        for (index, setup) in ComputerPlayer.openingSetups.enumerated() {
+            for (_, notation) in setup {
+                let base = Position(notation)!
+                for position in [base, Position(column: 7 - base.column, row: 3 - base.row)] {
+                    XCTAssertTrue(Board.isTile(position), "setup \(index): \(position) is not a tile")
+                    for direction in Direction.allCases {
+                        XCTAssertNotEqual(
+                            Board.edge(from: position, direction), .off,
+                            "setup \(index): \(position) has an open edge \(direction)"
+                        )
+                    }
+                }
+            }
+        }
+    }
+
     // MARK: - Tactics
 
     /// Player one to move; pushing right from d1 drops the round on f1 off

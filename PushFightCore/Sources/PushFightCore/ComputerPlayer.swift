@@ -68,16 +68,37 @@ public struct ComputerPlayer: Sendable {
 
     /// Solid opening setups for player one (columns a–d): a square wall near
     /// the centre line with the rounds sheltered behind it. Player two gets
-    /// the same setups rotated 180°, the board's only symmetry.
-    private static let openingSetups: [[(PieceKind, String)]] = [
+    /// the same setups rotated 180°, the board's only symmetry. No setup may
+    /// use a tile with an open edge (a2/a3, b1, b3, c4 and mirrors): a piece
+    /// there can be pushed straight off on the opponent's first turn.
+    static let openingSetups: [[(PieceKind, String)]] = [
         [(.square, "d1"), (.square, "d2"), (.square, "d3"), (.round, "c2"), (.round, "c3")],
-        [(.square, "d2"), (.square, "d3"), (.square, "c4"), (.round, "c2"), (.round, "c3")],
+        [(.square, "d2"), (.square, "d3"), (.square, "d4"), (.round, "c2"), (.round, "c3")],
         [(.square, "c2"), (.square, "d3"), (.square, "d1"), (.round, "d2"), (.round, "c3")],
     ]
 
     private func placementActions(for state: GameState, rng: inout SplitMix64) -> [Action] {
         guard let placer = state.placingPlayer else { return [] }
-        let setup = Self.openingSetups.randomElement(using: &rng)!
+
+        // Deckhand scatters its pieces; stronger levels use real setups, and
+        // the captain never strays from the solid d-file wall variants.
+        let setup: [(PieceKind, String)]
+        switch level {
+        case .deckhand:
+            var actions: [Action] = []
+            var working = state
+            while working.placingPlayer == placer,
+                  let action = working.legalActions().randomElement(using: &rng),
+                  let next = try? working.applying(action) {
+                working = next
+                actions.append(action)
+            }
+            return actions
+        case .bosun, .firstMate:
+            setup = Self.openingSetups.randomElement(using: &rng)!
+        case .captain:
+            setup = Self.openingSetups[Int(rng.next() % 2)]
+        }
         var actions: [Action] = []
         var working = state
         for (kind, notation) in setup {
@@ -103,7 +124,10 @@ public struct ComputerPlayer: Sendable {
 
     private struct Params {
         let depth: Int
-        let rootBeam: Int
+        /// How many of the depth-2 best candidates the captain re-ranks with
+        /// a full extra turn of lookahead.
+        let deepenCount: Int
+        /// Opponent replies expanded per node inside the deep search.
         let innerBeam: Int
         /// Moves scoring within `epsilon` of the best are considered equal
         /// and picked from at random, so weaker levels vary their play.
@@ -113,10 +137,10 @@ public struct ComputerPlayer: Sendable {
 
     private var params: Params {
         switch level {
-        case .deckhand: Params(depth: 0, rootBeam: 0, innerBeam: 0, epsilon: 0, budget: 0.5)
-        case .bosun: Params(depth: 1, rootBeam: .max, innerBeam: 0, epsilon: 25, budget: 1.5)
-        case .firstMate: Params(depth: 2, rootBeam: 64, innerBeam: 0, epsilon: 8, budget: 3)
-        case .captain: Params(depth: 3, rootBeam: 20, innerBeam: 10, epsilon: 0.5, budget: 5)
+        case .deckhand: Params(depth: 0, deepenCount: 0, innerBeam: 0, epsilon: 0, budget: 0.5)
+        case .bosun: Params(depth: 1, deepenCount: 0, innerBeam: 0, epsilon: 25, budget: 1.5)
+        case .firstMate: Params(depth: 2, deepenCount: 0, innerBeam: 0, epsilon: 6, budget: 3)
+        case .captain: Params(depth: 3, deepenCount: 24, innerBeam: 12, epsilon: 0.5, budget: 6)
         }
     }
 
@@ -154,21 +178,50 @@ public struct ComputerPlayer: Sendable {
             return pick(from: scored, epsilon: params.epsilon, rng: &rng)
         }
 
-        // Deepen the statically best candidates; the rest stay out of the
-        // running so an unexamined move can't win on its inflated static score.
-        let deadline = Date().addingTimeInterval(params.budget)
-        var deepened: [(score: Double, plan: TurnPlan)] = []
-        for (score, plan) in scored.prefix(params.rootBeam) {
+        // Pass 1 — sweep candidates in static order, valuing each by the
+        // opponent's best reply (a full two-turn view). Time-boxed rather
+        // than beam-limited so the search goes as wide as the budget allows.
+        let start = Date()
+        let deadline = start.addingTimeInterval(params.budget)
+        let sweepDeadline = params.depth >= 3
+            ? start.addingTimeInterval(params.budget * 0.4)
+            : deadline
+        var swept: [(score: Double, plan: TurnPlan)] = []
+        for (score, plan) in scored {
             let value: Double
             if score <= -Self.winValue {
                 value = score
             } else {
                 value = -negamax(
-                    plan.result, toMove: side.opponent, depth: params.depth - 1, ply: 1,
+                    plan.result, toMove: side.opponent, depth: 1, ply: 1,
                     alpha: -Double.infinity, beta: Double.infinity,
                     innerBeam: params.innerBeam, deadline: deadline
                 )
             }
+            swept.append((value, plan))
+            if value >= Self.winValue - 100 { break }
+            if Date() > sweepDeadline, swept.count >= 12 { break }
+        }
+        swept.sort { $0.score > $1.score }
+        guard params.depth >= 3, swept.first!.score < Self.winValue - 100 else {
+            return pick(from: swept, epsilon: params.epsilon, rng: &rng)
+        }
+
+        // Pass 2 (captain) — re-rank the two-turn best with a third turn of
+        // lookahead. Only deepened candidates stay in the running, so the
+        // final choice always rests on the deepest values available.
+        var deepened: [(score: Double, plan: TurnPlan)] = []
+        for (score, plan) in swept.prefix(params.deepenCount) {
+            if score <= -(Self.winValue - 100) {
+                // Confirmed losing lines can't improve with more depth.
+                deepened.append((score, plan))
+                continue
+            }
+            let value = -negamax(
+                plan.result, toMove: side.opponent, depth: 2, ply: 1,
+                alpha: -Double.infinity, beta: Double.infinity,
+                innerBeam: params.innerBeam, deadline: deadline
+            )
             deepened.append((value, plan))
             if value >= Self.winValue - 100 { break }
             if Date() > deadline, deepened.count >= 4 { break }
@@ -246,9 +299,29 @@ public struct ComputerPlayer: Sendable {
             bits &= bits - 1
             score += Geometry.tileValue[tile]
             score -= 14 * Double(Geometry.openEdgeCount[tile])
+            if Geometry.openEdgeCount[tile] > 0, isPushableOff(board, tile: tile, side: side) {
+                score -= 25
+            }
         }
         score += 2.5 * Double(pushCount(board, side: side))
         return score
+    }
+
+    /// True when an enemy square is lined up behind this piece so that a
+    /// single push (no moves needed) would shove it off an open edge.
+    private static func isPushableOff(_ board: Bitboard, tile: Int, side: Player) -> Bool {
+        guard tile != board.anchor else { return false }
+        let enemySquares = board.mask(of: side.opponent) & board.squares
+        for direction in 0..<4 where Geometry.neighbor[tile][direction] == Geometry.off {
+            let backward = Geometry.opposite[direction]
+            var cursor = Geometry.neighbor[tile][backward]
+            while cursor >= 0, board.occupied & (1 << cursor) != 0 {
+                if enemySquares & (1 << cursor) != 0 { return true }
+                if cursor == board.anchor { break }
+                cursor = Geometry.neighbor[cursor][backward]
+            }
+        }
+        return false
     }
 
     private static func pushCount(_ board: Bitboard, side: Player) -> Int {
@@ -487,6 +560,18 @@ public struct ComputerPlayer: Sendable {
         }
 
         static let adjacentTiles: [[Int]] = neighbor.map { $0.filter { $0 >= 0 } }
+
+        /// Index of the opposite direction (up↔down, left↔right), matching
+        /// the order of `Direction.allCases`.
+        static let opposite: [Int] = directions.map { direction in
+            let flipped: Direction = switch direction {
+            case .up: .down
+            case .down: .up
+            case .left: .right
+            case .right: .left
+            }
+            return directions.firstIndex(of: flipped)!
+        }
 
         /// How many directions push a piece on this tile straight off the board.
         static let openEdgeCount: [Int] = neighbor.map { $0.filter { $0 == off }.count }

@@ -113,7 +113,9 @@ final class PushFightUITests: XCTestCase {
         app.launch()
 
         app.buttons["Play Computer"].firstMatch.tap()
-        let level = app.buttons["Deckhand"].firstMatch
+        // First Mate: its fixed setups always cover e2 for the scripted push
+        // below (Deckhand places randomly).
+        let level = app.buttons["First Mate"].firstMatch
         XCTAssertTrue(level.waitForExistence(timeout: 5), "Level picker should appear")
         saveScreenshot("computer-level-picker")
         level.tap()
@@ -132,7 +134,7 @@ final class PushFightUITests: XCTestCase {
         waitForExpectations(timeout: 25)
         saveScreenshot("computer-placed")
 
-        // Every computer setup covers e2, so the d2 square can push right.
+        // Every First Mate setup covers e2, so the d2 square can push right.
         tapTile(app, "d2")
         tapTile(app, "e2")
 
