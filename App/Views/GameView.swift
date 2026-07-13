@@ -133,17 +133,29 @@ struct GameView: View {
         .overlay(Capsule().strokeBorder(isActive ? Theme.accent : .clear, lineWidth: 1.5))
     }
 
-    /// Online players always see their own side at the bottom.
+    /// Online and computer players always see their own side at the bottom.
     private var perspective: Player {
-        if case .online(let localSide) = session.mode { return localSide }
-        return .one
+        switch session.mode {
+        case .online(let localSide): localSide
+        case .computer(let humanSide, _): humanSide
+        case .local: .one
+        }
     }
 
     private func name(of player: Player) -> String {
-        if case .online(let localSide) = session.mode {
+        switch session.mode {
+        case .online(let localSide):
             return player == localSide ? "You" : (opponentName ?? "Opponent")
+        case .computer(let humanSide, let level):
+            return player == humanSide ? "You" : level.displayName
+        case .local:
+            return Theme.playerName(player)
         }
-        return Theme.playerName(player)
+    }
+
+    private func winText(_ winner: Player) -> String {
+        let name = name(of: winner)
+        return name == "You" ? "You win!" : "\(name) wins!"
     }
 
     private var statusLine: String {
@@ -156,13 +168,16 @@ struct GameView: View {
             return "\(name(of: placer)): place \(squares) square\(squares == 1 ? "" : "s"), \(rounds) round\(rounds == 1 ? "" : "s")"
         case .playing:
             let current = session.state.currentPlayer
-            if !session.interactionEnabled { return "Waiting for \(name(of: current))…" }
+            if !session.interactionEnabled {
+                if case .computer = session.mode { return "\(name(of: current)) is thinking…" }
+                return "Waiting for \(name(of: current))…"
+            }
             let movesLeft = session.state.movesRemaining
             return movesLeft > 0
                 ? "\(name(of: current)): \(movesLeft) move\(movesLeft == 1 ? "" : "s") left, then push"
                 : "\(name(of: current)): you must push"
         case .finished(let winner):
-            return "\(name(of: winner)) wins!"
+            return winText(winner)
         }
     }
 
@@ -231,7 +246,7 @@ struct GameView: View {
                 Image(systemName: "crown.fill")
                     .font(.system(size: 44))
                     .foregroundStyle(Theme.lastMove)
-                Text("\(name(of: winner)) wins!")
+                Text(winText(winner))
                     .font(.title.bold())
                     .foregroundStyle(.white)
                 Text(winDetail)

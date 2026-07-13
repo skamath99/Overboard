@@ -9,6 +9,7 @@ struct HomeView: View {
 
     @State private var localSession: GameSession?
     @State private var showFriendPicker = false
+    @State private var showComputerLevels = false
     @State private var matchPendingRemoval: GKTurnBasedMatch?
     @Environment(\.scenePhase) private var scenePhase
 
@@ -38,12 +39,14 @@ struct HomeView: View {
             GameView(
                 session: session,
                 onExit: {
+                    session.stopComputer()
                     saveLocalGameIfFinished(session)
                     localSession = nil
                 },
                 onRematch: {
+                    session.stopComputer()
                     saveLocalGameIfFinished(session)
-                    localSession = GameSession(mode: .local)
+                    localSession = GameSession(mode: session.mode)
                 }
             )
         }
@@ -59,6 +62,12 @@ struct HomeView: View {
         }
         .sheet(isPresented: $showFriendPicker) {
             FriendPickerView()
+        }
+        .sheet(isPresented: $showComputerLevels) {
+            ComputerLevelPickerView { level in
+                showComputerLevels = false
+                localSession = GameSession(mode: .computer(humanSide: .one, level: level))
+            }
         }
         .alert("Something went wrong", isPresented: errorBinding) {
             Button("OK") { gameCenter.lastError = nil }
@@ -176,6 +185,13 @@ struct HomeView: View {
             .buttonStyle(MenuButtonStyle(prominent: true))
 
             Button {
+                showComputerLevels = true
+            } label: {
+                Label("Play Computer", systemImage: "cpu")
+            }
+            .buttonStyle(MenuButtonStyle())
+
+            Button {
                 showFriendPicker = true
             } label: {
                 Label("Play a Friend", systemImage: "envelope.fill")
@@ -269,15 +285,23 @@ struct HomeView: View {
 
     private func saveLocalGameIfFinished(_ session: GameSession) {
         guard session.record.winner != nil else { return }
-        history.add(MatchRecord(
-            id: UUID(),
-            date: Date(),
-            mode: .local,
-            game: session.record,
-            localSide: nil,
-            opponentName: nil,
-            eloChange: nil
-        ))
+        let record: MatchRecord
+        switch session.mode {
+        case .local:
+            record = MatchRecord(
+                id: UUID(), date: Date(), mode: .local, game: session.record,
+                localSide: nil, opponentName: nil, eloChange: nil
+            )
+        case .computer(let humanSide, let level):
+            record = MatchRecord(
+                id: UUID(), date: Date(), mode: .computer, game: session.record,
+                localSide: humanSide, opponentName: level.displayName, eloChange: nil
+            )
+        case .online:
+            // Online games are recorded by GameCenterManager.
+            return
+        }
+        history.add(record)
     }
 }
 

@@ -7,12 +7,14 @@ struct MatchRecord: Identifiable, Codable, Equatable {
         case local
         case friend
         case ranked
+        case computer
 
         var label: String {
             switch self {
             case .local: "Pass & Play"
             case .friend: "Friend Match"
             case .ranked: "Ranked"
+            case .computer: "vs Computer"
             }
         }
     }

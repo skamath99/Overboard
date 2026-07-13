@@ -83,7 +83,7 @@ struct ReplayView: View {
     private var title: String {
         switch match.mode {
         case .local: "Pass & Play"
-        case .friend, .ranked: "vs \(match.opponentName ?? "Opponent")"
+        case .friend, .ranked, .computer: "vs \(match.opponentName ?? "Opponent")"
         }
     }
 

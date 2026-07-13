@@ -106,6 +106,86 @@ final class PushFightUITests: XCTestCase {
         XCTAssertTrue(slider.exists, "Replay screen must not pop back to the list")
     }
 
+    /// Plays the opening of a game against the computer: pick a level, place
+    /// pieces, watch the computer place its own, exchange first pushes.
+    func testPlayComputerPlacesAndReplies() throws {
+        let app = XCUIApplication()
+        app.launch()
+
+        app.buttons["Play Computer"].firstMatch.tap()
+        let level = app.buttons["Deckhand"].firstMatch
+        XCTAssertTrue(level.waitForExistence(timeout: 5), "Level picker should appear")
+        saveScreenshot("computer-level-picker")
+        level.tap()
+
+        let status = app.staticTexts["game-status"]
+        XCTAssertTrue(status.waitForExistence(timeout: 5))
+
+        // The human plays Ivory and places first.
+        for tile in ["d2", "d3", "d1", "c2", "c3"] {
+            tapTile(app, tile)
+        }
+
+        // The computer places its five pieces by itself, then it's our turn.
+        let ourFirstTurn = NSPredicate(format: "label CONTAINS 'You: 2 moves'")
+        expectation(for: ourFirstTurn, evaluatedWith: status)
+        waitForExpectations(timeout: 25)
+        saveScreenshot("computer-placed")
+
+        // Every computer setup covers e2, so the d2 square can push right.
+        tapTile(app, "d2")
+        tapTile(app, "e2")
+
+        // The computer takes over (status shows it thinking)…
+        let thinking = NSPredicate(format: "label CONTAINS 'thinking'")
+        expectation(for: thinking, evaluatedWith: status)
+        waitForExpectations(timeout: 10)
+
+        // …and answers with a complete turn (or, very rarely, ends the game).
+        let turnResolved = NSPredicate(format: "label CONTAINS 'You' OR label CONTAINS 'win'")
+        expectation(for: turnResolved, evaluatedWith: status)
+        waitForExpectations(timeout: 30)
+        saveScreenshot("computer-replied")
+    }
+
+    /// A finished computer game lands in Match History as "Lost vs …" with
+    /// the vs Computer label. Losing is the only deterministic finish: push
+    /// our own round off the open left edge on turn one.
+    func testPlayComputerFinishSavesHistory() throws {
+        let app = XCUIApplication()
+        app.launch()
+
+        app.buttons["Play Computer"].firstMatch.tap()
+        let level = app.buttons["Deckhand"].firstMatch
+        XCTAssertTrue(level.waitForExistence(timeout: 5))
+        level.tap()
+
+        let status = app.staticTexts["game-status"]
+        XCTAssertTrue(status.waitForExistence(timeout: 5))
+        for tile in ["b2", "c1", "d1", "a2", "a3"] {
+            tapTile(app, tile)
+        }
+
+        let ourFirstTurn = NSPredicate(format: "label CONTAINS 'You: 2 moves'")
+        expectation(for: ourFirstTurn, evaluatedWith: status)
+        waitForExpectations(timeout: 25)
+
+        // Suicide push: b2 shoves our a2 round off the open edge.
+        tapTile(app, "b2")
+        tapTile(app, "a2")
+        let lost = NSPredicate(format: "label CONTAINS 'Deckhand wins'")
+        expectation(for: lost, evaluatedWith: status)
+        waitForExpectations(timeout: 10)
+        saveScreenshot("computer-loss-overlay")
+
+        app.buttons["Done"].firstMatch.tap()
+        XCTAssertTrue(app.buttons["Match History"].firstMatch.waitForExistence(timeout: 5))
+        app.buttons["Match History"].firstMatch.tap()
+        let row = app.staticTexts["Lost vs Deckhand"].firstMatch
+        XCTAssertTrue(row.waitForExistence(timeout: 5), "Computer game should be in history")
+        saveScreenshot("computer-history-row")
+    }
+
     /// Writes a screenshot to the host filesystem (simulator only) so design
     /// can be reviewed without driving the app manually.
     private func saveScreenshot(_ name: String) {

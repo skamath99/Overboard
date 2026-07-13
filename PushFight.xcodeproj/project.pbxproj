@@ -15,6 +15,7 @@
 		64ACBF1C34E66EB251CBBEA1 /* PushFightApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 26815918801936FCD54F2FB8 /* PushFightApp.swift */; };
 		77D6E60F9CEC4487F253B38C /* ReplayView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1ED85B2658FA46395C6F8255 /* ReplayView.swift */; };
 		7D710F36030847C1314EE916 /* PushFightUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CDFFB0CE27040C7F714C5089 /* PushFightUITests.swift */; };
+		82489EAA14935E68D7824381 /* ComputerLevelPickerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A6FED18B78517F4300A2B9B /* ComputerLevelPickerView.swift */; };
 		9168F0A1618D03791EBE5F5F /* HowToPlayView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DDECE4760A1A98E6CDDCD044 /* HowToPlayView.swift */; };
 		9B45ED438AB724EBDC82D055 /* BoardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1D44DC4B2CFFDD4F8AC1C4E7 /* BoardView.swift */; };
 		9D0BF0F45939E272D26C83FA /* MatchRecord.swift in Sources */ = {isa = PBXBuildFile; fileRef = 35AC8D24F357A9E9F20DEEF7 /* MatchRecord.swift */; };
@@ -51,6 +52,7 @@
 		745CF9BF8BBE5AAF544EBF23 /* Theme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Theme.swift; sourceTree = "<group>"; };
 		7D5E2937CD9247EAA5DABFDE /* PushFight.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = PushFight.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		82DB3A2BC9273F212724163C /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		8A6FED18B78517F4300A2B9B /* ComputerLevelPickerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ComputerLevelPickerView.swift; sourceTree = "<group>"; };
 		C84FB05956288859DC6A7E34 /* GameView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameView.swift; sourceTree = "<group>"; };
 		CDFFB0CE27040C7F714C5089 /* PushFightUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PushFightUITests.swift; sourceTree = "<group>"; };
 		D3DC55271A1DE17384182945 /* GameSession.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameSession.swift; sourceTree = "<group>"; };
@@ -76,6 +78,7 @@
 			isa = PBXGroup;
 			children = (
 				1D44DC4B2CFFDD4F8AC1C4E7 /* BoardView.swift */,
+				8A6FED18B78517F4300A2B9B /* ComputerLevelPickerView.swift */,
 				C84FB05956288859DC6A7E34 /* GameView.swift */,
 				305FCA0619B4ECB28ED3A3DB /* HistoryView.swift */,
 				540E55DBF8B4F2DDF1A4ADF2 /* HomeView.swift */,
@@ -253,6 +256,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				9B45ED438AB724EBDC82D055 /* BoardView.swift in Sources */,
+				82489EAA14935E68D7824381 /* ComputerLevelPickerView.swift in Sources */,
 				A9AAB7831DB5FB61A199244E /* EloStore.swift in Sources */,
 				4BFAE473CEA922E22A5080B2 /* FriendPickerView.swift in Sources */,
 				1713B70DA43A1A6EEA5E1AFC /* GameCenterManager.swift in Sources */,

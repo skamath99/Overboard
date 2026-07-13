@@ -9,14 +9,21 @@ final class GameSession: ObservableObject {
         case local
         /// Online play: the local player controls exactly one side.
         case online(localSide: Player)
+        /// Single player against the built-in computer opponent.
+        case computer(humanSide: Player, level: AILevel)
     }
 
     @Published private(set) var record: GameRecord
     @Published private(set) var tracker: PieceTracker
     @Published var selection: Position?
     @Published var placementKind: PieceKind = .square
+    /// True from the moment the computer starts thinking until its last
+    /// animated action lands.
+    @Published private(set) var isComputerTurnRunning = false
 
     let mode: Mode
+    private var computerTask: Task<Void, Never>?
+
     /// Whether it is currently legal for the person holding the device to act.
     var interactionEnabled: Bool {
         switch mode {
@@ -24,6 +31,8 @@ final class GameSession: ObservableObject {
             true
         case .online(let side):
             actingPlayer == side
+        case .computer(let humanSide, _):
+            actingPlayer == humanSide && !isComputerTurnRunning
         }
     }
 
@@ -35,6 +44,7 @@ final class GameSession: ObservableObject {
         self.mode = mode
         self.record = record
         self.tracker = PieceTracker(replaying: record)
+        startComputerTurnIfNeeded()
     }
 
     var state: GameState { record.state }
@@ -156,6 +166,46 @@ final class GameSession: ObservableObject {
         onActionCommitted?(record, false)
     }
 
+    // MARK: - Computer opponent
+
+    /// Kicks off the computer's turn when playing against it and it is to
+    /// act. The search runs off the main thread; the chosen actions are then
+    /// applied one by one with short pauses so the moves read as deliberate.
+    private func startComputerTurnIfNeeded() {
+        guard case .computer(let humanSide, let level) = mode,
+              record.winner == nil,
+              actingPlayer != humanSide,
+              computerTask == nil
+        else { return }
+
+        let snapshot = record.state
+        isComputerTurnRunning = true
+        computerTask = Task { [weak self] in
+            let actions = await Task.detached(priority: .userInitiated) {
+                ComputerPlayer(level: level).turnActions(for: snapshot)
+            }.value
+            for (index, action) in actions.enumerated() {
+                try? await Task.sleep(nanoseconds: index == 0 ? 400_000_000 : 600_000_000)
+                guard let self, !Task.isCancelled else { return }
+                if self.record.winner != nil { break }
+                self.applyIfLegal(action)
+            }
+            guard let self, !Task.isCancelled else { return }
+            self.computerTask = nil
+            self.isComputerTurnRunning = false
+            // Handles the rare case where the computer must play another
+            // (losing) partial turn, and placement handoffs.
+            self.startComputerTurnIfNeeded()
+        }
+    }
+
+    /// Cancels any in-flight computer turn (call when leaving the game).
+    func stopComputer() {
+        computerTask?.cancel()
+        computerTask = nil
+        isComputerTurnRunning = false
+    }
+
     private func applyIfLegal(_ action: Action) {
         let before = record.state
         var updated = record
@@ -176,6 +226,7 @@ final class GameSession: ObservableObject {
         }
         if case .finished = state.phase { turnEnded = true }
         onActionCommitted?(record, turnEnded)
+        startComputerTurnIfNeeded()
     }
 }
 

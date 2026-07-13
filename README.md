@@ -5,6 +5,7 @@
 ## Features
 
 - **Pass & Play** — full local game on one device, with placement, move/push highlighting, undo, and animated pieces.
+- **Play Computer** — four difficulty levels (Deckhand → Captain) against a built-in AI, fully offline. The level design (depth-limited imperfect play, random choice among near-equal moves) follows [Maks Verver's Push Fight solver project](https://github.com/maksverver/pushfight); the solver's exact database is far too large to ship, so deeper levels use a heuristic alpha-beta turn search instead of perfect lookups.
 - **Play a Friend** — Game Center turn-based match via the system invite UI.
 - **Ranked Lobby** — auto-match against strangers from a single global queue, and ratings update after each ranked game.
 - **Match History** — every finished game is stored locally and can be replayed move by move (scrubber + autoplay).
@@ -17,6 +18,7 @@ PushFightiOS/
 ├── PushFightCore/          Pure Swift rules engine (SPM package, no dependencies)
 │   ├── GameState           Board, placement, BFS moves, pushes, rails, anchor, win detection
 │   ├── GameRecord          Action log; replay/undo/scrub derive any state
+│   ├── ComputerPlayer      Bitboard turn search + difficulty levels for Play Computer
 │   └── Elo                 Rating math
 ├── App/
 │   ├── Models/             GameSession (interaction/selection), stores (history, Elo)

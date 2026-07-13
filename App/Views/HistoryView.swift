@@ -76,7 +76,7 @@ private struct HistoryRow: View {
                 return "\(Theme.playerName(winner)) won"
             }
             return "Pass & Play"
-        case .friend, .ranked:
+        case .friend, .ranked, .computer:
             let name = match.opponentName ?? "Opponent"
             switch match.localPlayerWon {
             case true: return "Won vs \(name)"
